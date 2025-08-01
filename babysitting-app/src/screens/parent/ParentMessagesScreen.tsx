@@ -1,400 +1,490 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  FlatList,
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import Card from '../../components/Card';
-import Button from '../../components/Button';
-import Tabs from '../../components/Tabs';
+import Animated, { FadeInDown, FadeInUp, SlideInRight, SlideInLeft } from 'react-native-reanimated';
+import { AnimatedButton, AnimatedCard, AnimatedNotificationBadge, AnimatedGradientBackground } from '../../components/AnimatedComponents';
+import FeedbackService from '../../services/feedback.service';
+
+interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar: string;
+  content: string;
+  timestamp: Date;
+  isRead: boolean;
+  isUrgent: boolean;
+  type: 'text' | 'image' | 'location' | 'emergency';
+}
+
+interface Conversation {
+  id: string;
+  participantId: string;
+  participantName: string;
+  participantAvatar: string;
+  lastMessage: string;
+  lastMessageTime: Date;
+  unreadCount: number;
+  isOnline: boolean;
+  isUrgent: boolean;
+}
 
 const ParentMessagesScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const [activeTab, setActiveTab] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Mock data
-  const conversations = [
+  const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: '1',
-      sitterName: 'Sarah Johnson',
-      sitterAvatar: 'https://via.placeholder.com/60',
+      participantId: 'sitter1',
+      participantName: 'Sarah Johnson',
+      participantAvatar: 'https://example.com/sarah.jpg',
       lastMessage: "I'll be there in 10 minutes!",
-      timestamp: '2 min ago',
+      lastMessageTime: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
       unreadCount: 2,
       isOnline: true,
-      lastBooking: 'Today, 2:00 PM',
+      isUrgent: false,
     },
     {
       id: '2',
-      sitterName: 'Emily Chen',
-      sitterAvatar: 'https://via.placeholder.com/60',
-      lastMessage: 'The kids had a great time today!',
-      timestamp: '1 hour ago',
+      participantId: 'sitter2',
+      participantName: 'Michael Chen',
+      participantAvatar: 'https://example.com/michael.jpg',
+      lastMessage: "Everything is going great with Emma!",
+      lastMessageTime: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
       unreadCount: 0,
       isOnline: false,
-      lastBooking: 'Yesterday, 9:00 AM',
+      isUrgent: false,
     },
     {
       id: '3',
-      sitterName: 'Maria Rodriguez',
-      sitterAvatar: 'https://via.placeholder.com/60',
-      lastMessage: 'Can you confirm the time for tomorrow?',
-      timestamp: '3 hours ago',
+      participantId: 'sitter3',
+      participantName: 'Emma Rodriguez',
+      participantAvatar: 'https://example.com/emma.jpg',
+      lastMessage: "URGENT: Need to contact you immediately",
+      lastMessageTime: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago
       unreadCount: 1,
       isOnline: true,
-      lastBooking: 'Tomorrow, 3:00 PM',
+      isUrgent: true,
     },
-  ];
+  ]);
 
-  const tabs = [
-    { key: 'all', title: 'All' },
-    { key: 'unread', title: 'Unread' },
-    { key: 'favorites', title: 'Favorites' },
-  ];
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  
+  const feedbackService = FeedbackService.getInstance();
 
-  const renderConversationItem = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.conversationItem}>
-      <View style={styles.avatarContainer}>
-        <Image source={{ uri: item.sitterAvatar }} style={styles.avatar} />
-        <View style={[
-          styles.onlineIndicator,
-          { backgroundColor: item.isOnline ? '#10B981' : '#94A3B8' }
-        ]} />
-      </View>
-      
-      <View style={styles.conversationContent}>
-        <View style={styles.conversationHeader}>
-          <Text style={styles.sitterName}>{item.sitterName}</Text>
-          <Text style={styles.timestamp}>{item.timestamp}</Text>
-        </View>
-        
-        <View style={styles.messageRow}>
-          <Text style={styles.lastMessage} numberOfLines={1}>
-            {item.lastMessage}
-          </Text>
-          {item.unreadCount > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadCount}>{item.unreadCount}</Text>
-            </View>
-          )}
-        </View>
-        
-        <Text style={styles.lastBooking}>Last booking: {item.lastBooking}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  useEffect(() => {
+    feedbackService.trackScreen('ParentMessagesScreen');
+  }, []);
 
-  const getFilteredConversations = () => {
-    switch (activeTab) {
-      case 'unread':
-        return conversations.filter(conv => conv.unreadCount > 0);
-      case 'favorites':
-        return conversations.filter(conv => conv.sitterName.includes('Sarah')); // Mock favorites
-      default:
-        return conversations;
+  useEffect(() => {
+    if (selectedConversation) {
+      // Load messages for selected conversation
+      loadMessages(selectedConversation.id);
     }
+  }, [selectedConversation]);
+
+  const loadMessages = (conversationId: string) => {
+    // Mock messages data
+    const mockMessages: Message[] = [
+      {
+        id: '1',
+        senderId: 'sitter1',
+        senderName: 'Sarah Johnson',
+        senderAvatar: 'https://example.com/sarah.jpg',
+        content: "Hi! I'm on my way to your location.",
+        timestamp: new Date(Date.now() - 10 * 60 * 1000),
+        isRead: true,
+        isUrgent: false,
+        type: 'text',
+      },
+      {
+        id: '2',
+        senderId: 'parent',
+        senderName: 'You',
+        senderAvatar: 'https://example.com/parent.jpg',
+        content: "Perfect! See you soon.",
+        timestamp: new Date(Date.now() - 8 * 60 * 1000),
+        isRead: true,
+        isUrgent: false,
+        type: 'text',
+      },
+      {
+        id: '3',
+        senderId: 'sitter1',
+        senderName: 'Sarah Johnson',
+        senderAvatar: 'https://example.com/sarah.jpg',
+        content: "I'll be there in 10 minutes!",
+        timestamp: new Date(Date.now() - 5 * 60 * 1000),
+        isRead: false,
+        isUrgent: false,
+        type: 'text',
+      },
+    ];
+    
+    setMessages(mockMessages);
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#3A7DFF', '#FF7DB9']}
-        style={styles.gradient}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
+  const handleConversationSelect = (conversation: Conversation) => {
+    setSelectedConversation(conversation);
+    
+    // Mark messages as read
+    if (conversation.unreadCount > 0) {
+      setConversations(prev => prev.map(conv => 
+        conv.id === conversation.id 
+          ? { ...conv, unreadCount: 0 }
+          : conv
+      ));
+    }
+    
+    feedbackService.trackAction('conversation_opened', 'ParentMessagesScreen', {
+      conversationId: conversation.id,
+      participantId: conversation.participantId,
+    });
+  };
+
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || !selectedConversation) return;
+
+    const message: Message = {
+      id: Date.now().toString(),
+      senderId: 'parent',
+      senderName: 'You',
+      senderAvatar: 'https://example.com/parent.jpg',
+      content: newMessage.trim(),
+      timestamp: new Date(),
+      isRead: false,
+      isUrgent: false,
+      type: 'text',
+    };
+
+    setMessages(prev => [...prev, message]);
+    setNewMessage('');
+    
+    // Update conversation
+    setConversations(prev => prev.map(conv => 
+      conv.id === selectedConversation.id
+        ? { ...conv, lastMessage: newMessage.trim(), lastMessageTime: new Date() }
+        : conv
+    ));
+
+    feedbackService.trackAction('message_sent', 'ParentMessagesScreen', {
+      conversationId: selectedConversation.id,
+      messageLength: newMessage.length,
+    });
+  };
+
+  const handleBackToConversations = () => {
+    setSelectedConversation(null);
+    setMessages([]);
+  };
+
+  const formatTime = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  };
+
+  const renderConversationsList = () => (
+    <Animated.View entering={FadeInUp.delay(100)} style={styles.conversationsContainer}>
+      <Text style={styles.sectionTitle}>Messages</Text>
+      
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {conversations.map((conversation, index) => (
+          <AnimatedCard
+            key={conversation.id}
+            direction="up"
+            delay={index * 100}
+            style={[
+              styles.conversationCard,
+              conversation.isUrgent && styles.urgentConversation,
+            ]}
           >
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Messages</Text>
-          <TouchableOpacity style={styles.newMessageButton}>
-            <Ionicons name="add" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={styles.conversationContent}
+              onPress={() => handleConversationSelect(conversation)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.conversationHeader}>
+                <View style={styles.avatarContainer}>
+                  <View style={styles.avatar}>
+                    <Ionicons name="person" size={24} color="#3A7DFF" />
+                  </View>
+                  {conversation.isOnline && (
+                    <View style={styles.onlineIndicator} />
+                  )}
+                </View>
+                
+                <View style={styles.conversationInfo}>
+                  <View style={styles.conversationHeaderRow}>
+                    <Text style={styles.participantName}>{conversation.participantName}</Text>
+                    <Text style={styles.lastMessageTime}>
+                      {formatTime(conversation.lastMessageTime)}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.conversationFooter}>
+                    <Text 
+                      style={[
+                        styles.lastMessage,
+                        conversation.isUrgent && styles.urgentMessage,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {conversation.lastMessage}
+                    </Text>
+                    
+                    {conversation.unreadCount > 0 && (
+                      <AnimatedNotificationBadge
+                        count={conversation.unreadCount}
+                        size="small"
+                        style={styles.unreadBadge}
+                      />
+                    )}
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </AnimatedCard>
+        ))}
+      </ScrollView>
+    </Animated.View>
+  );
 
-        <View style={styles.content}>
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <View style={styles.searchInputContainer}>
-              <Ionicons name="search" size={20} color="#64748B" />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search conversations..."
-                placeholderTextColor="#64748B"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
+  const renderChatHeader = () => (
+    <Animated.View entering={SlideInRight.delay(100)} style={styles.chatHeader}>
+      <TouchableOpacity onPress={handleBackToConversations} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+      
+      <View style={styles.chatHeaderInfo}>
+        <View style={styles.chatAvatar}>
+          <Ionicons name="person" size={24} color="#3A7DFF" />
+        </View>
+        <View style={styles.chatHeaderText}>
+          <Text style={styles.chatParticipantName}>{selectedConversation?.participantName}</Text>
+          <Text style={styles.chatStatus}>
+            {selectedConversation?.isOnline ? 'Online' : 'Offline'}
+          </Text>
+        </View>
+      </View>
+      
+      <View style={styles.chatActions}>
+        <TouchableOpacity style={styles.chatActionButton}>
+          <Ionicons name="call" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.chatActionButton}>
+          <Ionicons name="videocam" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
+  );
+
+  const renderMessages = () => (
+    <Animated.View entering={SlideInRight.delay(200)} style={styles.messagesContainer}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        style={styles.messagesList}
+        contentContainerStyle={styles.messagesContent}
+      >
+        {messages.map((message, index) => (
+          <Animated.View
+            key={message.id}
+            entering={SlideInLeft.delay(index * 50)}
+            style={[
+              styles.messageContainer,
+              message.senderId === 'parent' ? styles.sentMessage : styles.receivedMessage,
+            ]}
+          >
+            <View style={[
+              styles.messageBubble,
+              message.senderId === 'parent' ? styles.sentBubble : styles.receivedBubble,
+              message.isUrgent && styles.urgentBubble,
+            ]}>
+              <Text style={[
+                styles.messageText,
+                message.isUrgent && styles.urgentMessageText,
+              ]}>
+                {message.content}
+              </Text>
+              <Text style={styles.messageTime}>
+                {formatTime(message.timestamp)}
+              </Text>
             </View>
-          </View>
+          </Animated.View>
+        ))}
+      </ScrollView>
+    </Animated.View>
+  );
 
-          {/* Tabs */}
-          <View style={styles.tabsContainer}>
-            <Tabs
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabPress={setActiveTab}
-              variant="pills"
-            />
-          </View>
-
-          {/* Conversations List */}
-          <View style={styles.conversationsContainer}>
-            {getFilteredConversations().length > 0 ? (
-              <FlatList
-                data={getFilteredConversations()}
-                renderItem={renderConversationItem}
-                keyExtractor={item => item.id}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.conversationsList}
-              />
-            ) : (
-              <View style={styles.emptyState}>
-                <Ionicons name="chatbubbles" size={64} color="#CBD5E1" />
-                <Text style={styles.emptyTitle}>No messages yet</Text>
-                <Text style={styles.emptySubtitle}>
-                  {activeTab === 'unread' 
-                    ? 'You\'re all caught up!'
-                    : 'Start a conversation with your sitters'
-                  }
-                </Text>
-                <Button
-                  title="Find Sitters"
-                  variant="primary"
-                  onPress={() => navigation.navigate('ParentBook' as never)}
-                />
-              </View>
-            )}
-          </View>
-
-          {/* Quick Actions */}
-          <View style={styles.quickActions}>
-            <Card style={styles.quickActionsCard}>
-              <Text style={styles.quickActionsTitle}>Quick Actions</Text>
-              <View style={styles.quickActionsGrid}>
-                <TouchableOpacity style={styles.quickAction}>
-                  <Ionicons name="calendar" size={24} color="#3A7DFF" />
-                  <Text style={styles.quickActionText}>Schedule</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.quickAction}>
-                  <Ionicons name="star" size={24} color="#FF7DB9" />
-                  <Text style={styles.quickActionText}>Rate</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.quickAction}>
-                  <Ionicons name="shield-checkmark" size={24} color="#10B981" />
-                  <Text style={styles.quickActionText}>Safety</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.quickAction}>
-                  <Ionicons name="help-circle" size={24} color="#F59E0B" />
-                  <Text style={styles.quickActionText}>Help</Text>
-                </TouchableOpacity>
-              </View>
-            </Card>
-          </View>
+  const renderMessageInput = () => (
+    <Animated.View entering={SlideInRight.delay(300)} style={styles.messageInputContainer}>
+      <View style={styles.inputRow}>
+        <TouchableOpacity style={styles.inputAction}>
+          <Ionicons name="add" size={24} color="#6B7280" />
+        </TouchableOpacity>
+        
+        <View style={styles.textInputContainer}>
+          <TextInput
+            style={styles.textInput}
+            value={newMessage}
+            onChangeText={setNewMessage}
+            placeholder="Type a message..."
+            multiline
+            maxLength={500}
+          />
         </View>
-      </LinearGradient>
-    </SafeAreaView>
+        
+        <TouchableOpacity style={styles.inputAction}>
+          <Ionicons name="camera" size={24} color="#6B7280" />
+        </TouchableOpacity>
+        
+        <AnimatedButton
+          title="Send"
+          onPress={handleSendMessage}
+          variant="primary"
+          size="small"
+          disabled={!newMessage.trim()}
+        />
+      </View>
+    </Animated.View>
+  );
+
+  return (
+    <AnimatedGradientBackground>
+      <SafeAreaView style={styles.container}>
+        {selectedConversation ? (
+          <>
+            {renderChatHeader()}
+            {renderMessages()}
+            {renderMessageInput()}
+          </>
+        ) : (
+          renderConversationsList()
+        )}
+      </SafeAreaView>
+    </AnimatedGradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  gradient: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  newMessageButton: {
-    padding: 8,
-  },
-  content: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  searchContainer: {
-    padding: 20,
-  },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#1E293B',
-  },
-  tabsContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  conversationsContainer: {
-    flex: 1,
-  },
-  conversationsList: {
-    paddingHorizontal: 20,
-  },
-  conversationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: 16,
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  container: { flex: 1 },
+  conversationsContainer: { flex: 1, padding: 20 },
+  sectionTitle: { fontSize: 24, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 20 },
+  conversationCard: { marginBottom: 12 },
+  urgentConversation: { borderLeftWidth: 4, borderLeftColor: '#EF4444' },
+  conversationContent: { padding: 16 },
+  conversationHeader: { flexDirection: 'row', alignItems: 'center' },
+  avatarContainer: { position: 'relative', marginRight: 12 },
+  avatar: { 
+    width: 48, 
+    height: 48, 
+    borderRadius: 24, 
+    backgroundColor: '#F3F4F6', 
+    justifyContent: 'center', 
+    alignItems: 'center' 
   },
   onlineIndicator: {
     position: 'absolute',
     bottom: 2,
     right: 2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 3,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
     borderColor: '#FFFFFF',
   },
-  conversationContent: {
-    flex: 1,
+  conversationInfo: { flex: 1 },
+  conversationHeaderRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 4 
   },
-  conversationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
+  participantName: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
+  lastMessageTime: { fontSize: 12, color: '#FFFFFF', opacity: 0.7 },
+  conversationFooter: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center' 
   },
-  sitterName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1E293B',
-  },
-  timestamp: {
-    fontSize: 12,
-    color: '#64748B',
-  },
-  messageRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  lastMessage: {
-    flex: 1,
-    fontSize: 14,
-    color: '#64748B',
+  lastMessage: { 
+    flex: 1, 
+    fontSize: 14, 
+    color: '#FFFFFF', 
+    opacity: 0.8,
     marginRight: 8,
   },
-  unreadBadge: {
-    backgroundColor: '#3A7DFF',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  unreadCount: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  lastBooking: {
-    fontSize: 12,
-    color: '#94A3B8',
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#64748B',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: '#94A3B8',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  quickActions: {
-    padding: 20,
-  },
-  quickActionsCard: {
-    padding: 20,
-  },
-  quickActionsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1E293B',
-    marginBottom: 16,
-  },
-  quickActionsGrid: {
+  urgentMessage: { color: '#EF4444', fontWeight: '600' },
+  unreadBadge: { marginLeft: 8 },
+  chatHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  quickAction: {
     alignItems: 'center',
-    flex: 1,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
-  quickActionText: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 8,
-    textAlign: 'center',
+  backButton: { marginRight: 16 },
+  chatHeaderInfo: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  chatAvatar: { 
+    width: 40, 
+    height: 40, 
+    borderRadius: 20, 
+    backgroundColor: '#F3F4F6', 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  chatHeaderText: { flex: 1 },
+  chatParticipantName: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
+  chatStatus: { fontSize: 12, color: '#FFFFFF', opacity: 0.7 },
+  chatActions: { flexDirection: 'row', gap: 12 },
+  chatActionButton: { padding: 8 },
+  messagesContainer: { flex: 1 },
+  messagesList: { flex: 1 },
+  messagesContent: { padding: 16 },
+  messageContainer: { marginBottom: 12 },
+  sentMessage: { alignItems: 'flex-end' },
+  receivedMessage: { alignItems: 'flex-start' },
+  messageBubble: { 
+    maxWidth: '80%', 
+    padding: 12, 
+    borderRadius: 16,
+  },
+  sentBubble: { backgroundColor: '#3A7DFF' },
+  receivedBubble: { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
+  urgentBubble: { backgroundColor: '#EF4444' },
+  messageText: { fontSize: 14, color: '#FFFFFF', marginBottom: 4 },
+  urgentMessageText: { fontWeight: '600' },
+  messageTime: { fontSize: 10, color: '#FFFFFF', opacity: 0.6 },
+  messageInputContainer: { 
+    padding: 16, 
+    borderTopWidth: 1, 
+    borderTopColor: 'rgba(255, 255, 255, 0.1)' 
+  },
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  inputAction: { padding: 8 },
+  textInputContainer: { 
+    flex: 1, 
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+    borderRadius: 20, 
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  textInput: { 
+    fontSize: 16, 
+    color: '#FFFFFF', 
+    maxHeight: 100,
+    textAlignVertical: 'top',
   },
 });
 

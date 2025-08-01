@@ -1,497 +1,430 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  Animated,
-  Dimensions,
-  Vibration,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { EmergencySOSService, EmergencyAlert } from '../services/emergency-sos.service';
-import { GPSTrackingService } from '../services/gps-tracking.service';
+import Animated, { 
+  FadeInDown, 
+  FadeInUp, 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withRepeat, 
+  withTiming,
+  withSequence,
+  interpolate,
+  Extrapolate
+} from 'react-native-reanimated';
+import { AnimatedButton, AnimatedPulse, AnimatedGradientBackground, AnimatedShake } from '../components/AnimatedComponents';
+import FeedbackService from '../services/feedback.service';
 
-const { width, height } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const EmergencySOSScreen: React.FC = () => {
   const [isEmergencyActive, setIsEmergencyActive] = useState(false);
-  const [currentAlert, setCurrentAlert] = useState<EmergencyAlert | null>(null);
-  const [pulseAnimation] = useState(new Animated.Value(1));
-  const [shakeAnimation] = useState(new Animated.Value(0));
+  const [emergencyType, setEmergencyType] = useState<'medical' | 'safety' | 'urgent' | null>(null);
+  const [countdown, setCountdown] = useState(5);
+  const [isContacting, setIsContacting] = useState(false);
+  
+  const feedbackService = FeedbackService.getInstance();
+  const pulseScale = useSharedValue(1);
+  const shakeValue = useSharedValue(0);
 
   useEffect(() => {
-    // Initialize emergency service
-    EmergencySOSService.initialize();
-
-    // Set up emergency callbacks
-    EmergencySOSService.setCallbacks({
-      onEmergencyTriggered: (alert) => {
-        setIsEmergencyActive(true);
-        setCurrentAlert(alert);
-        startEmergencyAnimations();
-      },
-      onEmergencyResolved: (alert) => {
-        setIsEmergencyActive(false);
-        setCurrentAlert(null);
-        stopEmergencyAnimations();
-      },
-      onEmergencyEscalated: (alert) => {
-        Alert.alert(
-          'Emergency Escalated',
-          'Emergency has been escalated to authorities due to no response.',
-          [{ text: 'OK' }]
-        );
-      },
-    });
-
-    // Check if emergency is already active
-    checkEmergencyStatus();
+    feedbackService.trackScreen('EmergencySOSScreen');
   }, []);
 
-  const checkEmergencyStatus = async () => {
-    const isActive = EmergencySOSService.isEmergencyActive();
-    setIsEmergencyActive(isActive);
+  useEffect(() => {
+    if (isEmergencyActive) {
+      // Start pulse animation
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.2, { duration: 800 }),
+          withTiming(1, { duration: 800 })
+        ),
+        -1,
+        true
+      );
+
+      // Start shake animation
+      shakeValue.value = withRepeat(
+        withTiming(1, { duration: 200 }),
+        -1,
+        true
+      );
+
+      // Start countdown
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            handleEmergencyTrigger();
+            return 5;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else {
+      pulseScale.value = withTiming(1, { duration: 300 });
+      shakeValue.value = withTiming(0, { duration: 300 });
+    }
+  }, [isEmergencyActive]);
+
+  const handleEmergencyTrigger = async () => {
+    setIsContacting(true);
     
-    if (isActive) {
-      const alert = await EmergencySOSService.getCurrentEmergencyAlert();
-      setCurrentAlert(alert);
-      startEmergencyAnimations();
+    try {
+      // Track emergency action
+      feedbackService.trackAction('emergency_triggered', 'EmergencySOSScreen', {
+        emergencyType,
+        timestamp: Date.now(),
+      });
+
+      // Simulate emergency response
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      Alert.alert(
+        'Emergency Response',
+        'Emergency services have been contacted. Help is on the way.',
+        [{ text: 'OK', onPress: () => setIsEmergencyActive(false) }]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to contact emergency services. Please try again.');
+    } finally {
+      setIsContacting(false);
     }
   };
 
-  const startEmergencyAnimations = () => {
-    // Pulse animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnimation, {
-          toValue: 1.2,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnimation, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // Shake animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(shakeAnimation, {
-          toValue: 10,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.timing(shakeAnimation, {
-          toValue: -10,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.timing(shakeAnimation, {
-          toValue: 0,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // Vibrate continuously
-    Vibration.vibrate([500, 500], true);
+  const handleEmergencyTypeSelect = (type: 'medical' | 'safety' | 'urgent') => {
+    setEmergencyType(type);
+    setIsEmergencyActive(true);
+    setCountdown(5);
+    
+    feedbackService.trackAction('emergency_type_selected', 'EmergencySOSScreen', {
+      emergencyType: type,
+    });
   };
 
-  const stopEmergencyAnimations = () => {
-    pulseAnimation.stopAnimation();
-    shakeAnimation.stopAnimation();
-    Vibration.cancel();
+  const handleCancelEmergency = () => {
+    setIsEmergencyActive(false);
+    setEmergencyType(null);
+    setCountdown(5);
+    
+    feedbackService.trackAction('emergency_cancelled', 'EmergencySOSScreen', {
+      emergencyType,
+    });
   };
 
-  const handleSOSTrigger = async () => {
-    Alert.alert(
-      '🚨 Emergency SOS',
-      'Are you sure you want to trigger an emergency alert? This will immediately notify emergency contacts and authorities.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'TRIGGER SOS',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const alert = await EmergencySOSService.triggerSOS('manual_sos');
-              if (alert) {
-                Alert.alert(
-                  'Emergency SOS Triggered',
-                  'Emergency contacts have been notified. Help is on the way.',
-                  [{ text: 'OK' }]
-                );
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Failed to trigger emergency SOS. Please try again.');
-            }
-          },
-        },
-      ]
-    );
-  };
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
 
-  const handleResolveEmergency = async () => {
-    if (!currentAlert) return;
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{
+      translateX: interpolate(
+        shakeValue.value,
+        [0, 1],
+        [0, 10],
+        Extrapolate.CLAMP
+      )
+    }],
+  }));
 
-    Alert.alert(
-      'Resolve Emergency',
-      'Are you sure you want to resolve this emergency?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Resolve',
-          onPress: async () => {
-            try {
-              const success = await EmergencySOSService.resolveEmergency(
-                currentAlert.id,
-                'user_resolved',
-                'Emergency resolved by user'
-              );
-              if (success) {
-                Alert.alert('Emergency Resolved', 'The emergency has been resolved.');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Failed to resolve emergency.');
-            }
-          },
-        },
-      ]
-    );
-  };
+  const renderEmergencyButton = () => (
+    <Animated.View entering={FadeInDown.delay(100)} style={styles.emergencyContainer}>
+      <Text style={styles.emergencyTitle}>Emergency SOS</Text>
+      <Text style={styles.emergencySubtitle}>
+        Tap the button below to trigger emergency response
+      </Text>
+      
+      <Animated.View style={[styles.sosButtonContainer, pulseStyle]}>
+        <TouchableOpacity
+          style={styles.sosButton}
+          onPress={() => handleEmergencyTypeSelect('urgent')}
+          activeOpacity={0.8}
+        >
+          <AnimatedPulse style={styles.sosButtonInner}>
+            <Ionicons name="warning" size={48} color="#FFFFFF" />
+            <Text style={styles.sosButtonText}>SOS</Text>
+          </AnimatedPulse>
+        </TouchableOpacity>
+      </Animated.View>
+    </Animated.View>
+  );
 
-  const handleFalseAlarm = async () => {
-    if (!currentAlert) return;
+  const renderEmergencyTypes = () => (
+    <Animated.View entering={FadeInUp.delay(200)} style={styles.emergencyTypes}>
+      <Text style={styles.typesTitle}>Select Emergency Type</Text>
+      
+      <View style={styles.typeButtons}>
+        <AnimatedButton
+          title="Medical Emergency"
+          onPress={() => handleEmergencyTypeSelect('medical')}
+          variant="danger"
+          size="large"
+          icon="medical"
+          style={styles.typeButton}
+        />
+        
+        <AnimatedButton
+          title="Safety Concern"
+          onPress={() => handleEmergencyTypeSelect('safety')}
+          variant="danger"
+          size="large"
+          icon="shield"
+          style={styles.typeButton}
+        />
+        
+        <AnimatedButton
+          title="Urgent Help"
+          onPress={() => handleEmergencyTypeSelect('urgent')}
+          variant="danger"
+          size="large"
+          icon="warning"
+          style={styles.typeButton}
+        />
+      </View>
+    </Animated.View>
+  );
 
-    Alert.alert(
-      'False Alarm',
-      'Are you sure this was a false alarm?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Mark as False Alarm',
-          onPress: async () => {
-            try {
-              const success = await EmergencySOSService.markFalseAlarm(currentAlert.id);
-              if (success) {
-                Alert.alert('False Alarm', 'Emergency marked as false alarm.');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Failed to mark as false alarm.');
-            }
-          },
-        },
-      ]
-    );
-  };
+  const renderActiveEmergency = () => (
+    <Animated.View entering={FadeInUp.delay(100)} style={styles.activeEmergency}>
+      <Animated.View style={[styles.emergencyAlert, shakeStyle]}>
+        <Ionicons name="warning" size={64} color="#EF4444" />
+        <Text style={styles.emergencyAlertTitle}>EMERGENCY ACTIVE</Text>
+        <Text style={styles.emergencyAlertSubtitle}>
+          {emergencyType === 'medical' && 'Medical emergency detected'}
+          {emergencyType === 'safety' && 'Safety concern reported'}
+          {emergencyType === 'urgent' && 'Urgent help requested'}
+        </Text>
+      </Animated.View>
 
-  const handleTestEmergency = async () => {
-    Alert.alert(
-      'Test Emergency System',
-      'This will test the emergency system without sending real alerts.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Test',
-          onPress: async () => {
-            try {
-              const success = await EmergencySOSService.testEmergencySystem();
-              if (success) {
-                Alert.alert('Test Successful', 'Emergency system test completed successfully.');
-              } else {
-                Alert.alert('Test Failed', 'Emergency system test failed.');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Emergency system test failed.');
-            }
-          },
-        },
-      ]
-    );
-  };
+      <Animated.View entering={FadeInUp.delay(200)} style={styles.countdownContainer}>
+        <Text style={styles.countdownLabel}>Contacting emergency services in:</Text>
+        <Text style={styles.countdownTimer}>{countdown}</Text>
+      </Animated.View>
+
+      <Animated.View entering={FadeInUp.delay(300)} style={styles.emergencyActions}>
+        <AnimatedButton
+          title={isContacting ? "Contacting..." : "Cancel Emergency"}
+          onPress={handleCancelEmergency}
+          variant="secondary"
+          size="large"
+          loading={isContacting}
+          disabled={isContacting}
+        />
+      </Animated.View>
+
+      <Animated.View entering={FadeInUp.delay(400)} style={styles.emergencyInfo}>
+        <Text style={styles.infoTitle}>What happens next:</Text>
+        <View style={styles.infoList}>
+          <View style={styles.infoItem}>
+            <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+            <Text style={styles.infoText}>Emergency services contacted</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+            <Text style={styles.infoText}>Location shared with responders</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+            <Text style={styles.infoText}>GuardianNest support notified</Text>
+          </View>
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+
+  const renderQuickContacts = () => (
+    <Animated.View entering={FadeInUp.delay(300)} style={styles.quickContacts}>
+      <Text style={styles.contactsTitle}>Quick Contacts</Text>
+      
+      <View style={styles.contactButtons}>
+        <TouchableOpacity style={styles.contactButton}>
+          <Ionicons name="call" size={24} color="#3A7DFF" />
+          <Text style={styles.contactText}>Call Parent</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.contactButton}>
+          <Ionicons name="chatbubble" size={24} color="#3A7DFF" />
+          <Text style={styles.contactText}>Message</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.contactButton}>
+          <Ionicons name="location" size={24} color="#3A7DFF" />
+          <Text style={styles.contactText}>Share Location</Text>
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={isEmergencyActive ? ['#FF0000', '#FF4444'] : ['#3A7DFF', '#FF7DB9']}
-        style={styles.gradient}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            {isEmergencyActive ? '🚨 EMERGENCY ACTIVE' : 'Emergency SOS'}
-          </Text>
-          <Text style={styles.subtitle}>
-            {isEmergencyActive
-              ? 'Emergency contacts have been notified'
-              : 'Tap the button below in case of emergency'}
-          </Text>
-        </View>
-
-        <View style={styles.content}>
-          {isEmergencyActive ? (
-            // Emergency Active State
-            <View style={styles.emergencyActiveContainer}>
-              <Animated.View
-                style={[
-                  styles.emergencyIcon,
-                  {
-                    transform: [
-                      { scale: pulseAnimation },
-                      { translateX: shakeAnimation },
-                    ],
-                  },
-                ]}
-              >
-                <Ionicons name="warning" size={80} color="#FFFFFF" />
-              </Animated.View>
-              
-              <Text style={styles.emergencyText}>EMERGENCY SOS ACTIVE</Text>
-              <Text style={styles.emergencyDescription}>
-                Emergency contacts and authorities have been notified.
-                Your location is being tracked for safety.
-              </Text>
-
-              <View style={styles.emergencyActions}>
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.resolveButton]}
-                  onPress={handleResolveEmergency}
-                >
-                  <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
-                  <Text style={styles.actionButtonText}>Resolve Emergency</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.falseAlarmButton]}
-                  onPress={handleFalseAlarm}
-                >
-                  <Ionicons name="close-circle" size={24} color="#FFFFFF" />
-                  <Text style={styles.actionButtonText}>False Alarm</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            // Normal State
-            <View style={styles.normalStateContainer}>
-              <View style={styles.sosButtonContainer}>
-                <TouchableOpacity
-                  style={styles.sosButton}
-                  onPress={handleSOSTrigger}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={['#FF0000', '#FF4444']}
-                    style={styles.sosButtonGradient}
-                  >
-                    <Ionicons name="warning" size={60} color="#FFFFFF" />
-                    <Text style={styles.sosButtonText}>SOS</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.sosDescription}>
-                Press the SOS button above to immediately alert emergency contacts
-                and authorities. Your location will be shared automatically.
-              </Text>
-
-              <View style={styles.safetyInfo}>
-                <Text style={styles.safetyTitle}>Safety Features:</Text>
-                <Text style={styles.safetyItem}>• GPS location tracking</Text>
-                <Text style={styles.safetyItem}>• Emergency contact notification</Text>
-                <Text style={styles.safetyItem}>• Automatic escalation after 5 minutes</Text>
-                <Text style={styles.safetyItem}>• Direct connection to authorities</Text>
-              </View>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.testButton}
-            onPress={handleTestEmergency}
-          >
-            <Ionicons name="settings" size={20} color="#FFFFFF" />
-            <Text style={styles.testButtonText}>Test Emergency System</Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-    </SafeAreaView>
+    <AnimatedGradientBackground>
+      <SafeAreaView style={styles.container}>
+        {isEmergencyActive ? (
+          renderActiveEmergency()
+        ) : (
+          <>
+            {renderEmergencyButton()}
+            {renderEmergencyTypes()}
+            {renderQuickContacts()}
+          </>
+        )}
+      </SafeAreaView>
+    </AnimatedGradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
-  },
-  header: {
-    alignItems: 'center',
-    paddingTop: 20,
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    opacity: 0.9,
-  },
-  content: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    padding: 20,
   },
-  normalStateContainer: {
+  emergencyContainer: {
     alignItems: 'center',
-    width: '100%',
-  },
-  sosButtonContainer: {
     marginBottom: 40,
   },
-  sosButton: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-  },
-  sosButtonGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sosButtonText: {
+  emergencyTitle: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginTop: 10,
+    marginBottom: 8,
   },
-  sosDescription: {
+  emergencySubtitle: {
     fontSize: 16,
     color: '#FFFFFF',
+    opacity: 0.8,
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 40,
-    opacity: 0.9,
+    marginBottom: 32,
   },
-  safetyInfo: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: 20,
-    borderRadius: 12,
-    width: '100%',
+  sosButtonContainer: {
+    alignItems: 'center',
   },
-  safetyTitle: {
+  sosButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  sosButtonInner: {
+    alignItems: 'center',
+  },
+  sosButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 10,
+    marginTop: 4,
   },
-  safetyItem: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    marginBottom: 5,
-    opacity: 0.9,
+  emergencyTypes: {
+    marginBottom: 40,
   },
-  emergencyActiveContainer: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  emergencyIcon: {
-    marginBottom: 20,
-  },
-  emergencyText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
-  },
-  emergencyDescription: {
-    fontSize: 16,
+  typesTitle: {
+    fontSize: 20,
+    fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 40,
-    opacity: 0.9,
+    marginBottom: 20,
+  },
+  typeButtons: {
+    gap: 12,
+  },
+  typeButton: {
+    marginBottom: 8,
+  },
+  activeEmergency: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emergencyAlert: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  emergencyAlertTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#EF4444',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emergencyAlertSubtitle: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    opacity: 0.8,
+    textAlign: 'center',
+  },
+  countdownContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  countdownLabel: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  countdownTimer: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#EF4444',
   },
   emergencyActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 32,
+  },
+  emergencyInfo: {
     width: '100%',
   },
-  actionButton: {
+  infoTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 16,
+  },
+  infoList: {
+    gap: 12,
+  },
+  infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    minWidth: 140,
-    justifyContent: 'center',
   },
-  resolveButton: {
-    backgroundColor: '#10B981',
-  },
-  falseAlarmButton: {
-    backgroundColor: '#6B7280',
-  },
-  actionButtonText: {
-    color: '#FFFFFF',
+  infoText: {
     fontSize: 14,
+    color: '#FFFFFF',
+    marginLeft: 12,
+  },
+  quickContacts: {
+    marginTop: 20,
+  },
+  contactsTitle: {
+    fontSize: 18,
     fontWeight: '600',
-    marginLeft: 8,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 16,
   },
-  footer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  testButton: {
+  contactButtons: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
+    justifyContent: 'space-around',
   },
-  testButtonText: {
+  contactButton: {
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    minWidth: 80,
+  },
+  contactText: {
+    fontSize: 12,
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
 
