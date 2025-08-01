@@ -1,0 +1,346 @@
+name: 🧪 Comprehensive Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '18'
+  POSTGRES_VERSION: '15'
+
+jobs:
+  # Backend Tests
+  backend-unit-tests:
+    name: 🔧 Backend Unit Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:${{ env.POSTGRES_VERSION }}
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: babysitting_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: 🔧 Run backend unit tests
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test:test@localhost:5432/babysitting_test
+          JWT_SECRET: test-secret-key
+          STRIPE_SECRET_KEY: sk_test_test
+        run: npm run test:cov
+
+      - name: 📊 Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage/lcov.info
+          flags: backend-unit
+          name: backend-unit-coverage
+
+  backend-integration-tests:
+    name: 🔗 Backend Integration Tests
+    runs-on: ubuntu-latest
+    needs: backend-unit-tests
+    
+    services:
+      postgres:
+        image: postgres:${{ env.POSTGRES_VERSION }}
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: babysitting_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: 🔗 Run backend integration tests
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test:test@localhost:5432/babysitting_test
+          JWT_SECRET: test-secret-key
+          STRIPE_SECRET_KEY: sk_test_test
+        run: npm run test:e2e
+
+  # Frontend Tests
+  frontend-unit-tests:
+    name: 📱 Frontend Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: babysitting-app/package-lock.json
+
+      - name: 📦 Install frontend dependencies
+        working-directory: ./babysitting-app
+        run: npm ci
+
+      - name: 📱 Run frontend unit tests
+        working-directory: ./babysitting-app
+        run: npm run test:coverage
+
+      - name: 📊 Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./babysitting-app/coverage/lcov.info
+          flags: frontend-unit
+          name: frontend-unit-coverage
+
+  # Load Testing
+  load-tests:
+    name: ⚡ Load Tests
+    runs-on: ubuntu-latest
+    needs: [backend-unit-tests, backend-integration-tests]
+    
+    services:
+      postgres:
+        image: postgres:${{ env.POSTGRES_VERSION }}
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: babysitting_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: 🚀 Start backend server
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test:test@localhost:5432/babysitting_test
+          JWT_SECRET: test-secret-key
+          STRIPE_SECRET_KEY: sk_test_test
+        run: |
+          npm run build
+          npm start &
+          sleep 10
+
+      - name: 📦 Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: ⚡ Run load tests
+        working-directory: ./backend
+        env:
+          BASE_URL: http://localhost:3000
+          TEST_USER_TOKEN: test-token
+        run: k6 run test/load/load-test.js
+
+  # Security Testing
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install Snyk
+        run: npm install -g snyk
+
+      - name: 🔒 Run Snyk security scan (Backend)
+        working-directory: ./backend
+        run: snyk test --severity-threshold=high --policy-path=test/security/snyk-policy.json
+
+      - name: 🔒 Run Snyk security scan (Frontend)
+        working-directory: ./babysitting-app
+        run: snyk test --severity-threshold=high
+
+      - name: 📊 Upload Snyk results
+        uses: actions/upload-artifact@v3
+        with:
+          name: snyk-results
+          path: |
+            backend/snyk-report.json
+            babysitting-app/snyk-report.json
+
+  # E2E Tests (iOS)
+  e2e-tests-ios:
+    name: 🍎 E2E Tests (iOS)
+    runs-on: macos-latest
+    needs: [frontend-unit-tests]
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: babysitting-app/package-lock.json
+
+      - name: 📦 Install frontend dependencies
+        working-directory: ./babysitting-app
+        run: npm ci
+
+      - name: 📱 Setup iOS Simulator
+        run: |
+          xcrun simctl list devices
+          xcrun simctl boot "iPhone 14"
+
+      - name: 🚀 Run E2E tests (iOS)
+        working-directory: ./babysitting-app
+        run: |
+          npx detox build --configuration ios.sim.debug
+          npx detox test --configuration ios.sim.debug --loglevel trace
+
+  # E2E Tests (Android)
+  e2e-tests-android:
+    name: 🤖 E2E Tests (Android)
+    runs-on: ubuntu-latest
+    needs: [frontend-unit-tests]
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: babysitting-app/package-lock.json
+
+      - name: 📦 Install frontend dependencies
+        working-directory: ./babysitting-app
+        run: npm ci
+
+      - name: 🤖 Setup Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          script: echo "Emulator is ready"
+
+      - name: 🚀 Run E2E tests (Android)
+        working-directory: ./babysitting-app
+        run: |
+          npx detox build --configuration android.emu.debug
+          npx detox test --configuration android.emu.debug --loglevel trace
+
+  # Test Results Summary
+  test-summary:
+    name: 📋 Test Summary
+    runs-on: ubuntu-latest
+    needs: [
+      backend-unit-tests,
+      backend-integration-tests,
+      frontend-unit-tests,
+      load-tests,
+      security-scan,
+      e2e-tests-ios,
+      e2e-tests-android
+    ]
+    if: always()
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📊 Generate test summary
+        run: |
+          echo "## 🧪 Test Suite Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Unit Tests | ${{ needs.backend-unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Integration Tests | ${{ needs.backend-integration-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Unit Tests | ${{ needs.frontend-unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Load Tests | ${{ needs.load-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests (iOS) | ${{ needs.e2e-tests-ios.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests (Android) | ${{ needs.e2e-tests-android.result }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🚨 Check for failures
+        if: contains(needs.*.result, 'failure')
+        run: |
+          echo "❌ Some tests failed!"
+          exit 1
+
+      - name: ✅ All tests passed
+        if: "!contains(needs.*.result, 'failure')"
+        run: |
+          echo "✅ All tests passed successfully!" 
