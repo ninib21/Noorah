@@ -1,54 +1,62 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SitterProfile } from '../entities/sitter-profile.entity';
-import { User } from '../entities/user.entity';
-import { Booking } from '../entities/booking.entity';
+import { User, UserType } from '../entities/user.entity';
+import { Booking, BookingStatus } from '../entities/booking.entity';
 import { Review } from '../entities/review.entity';
 
-export interface SitterMatchRequest {
+export interface MatchCriteria {
+  parentId: string;
   childId: string;
-  parentPreferences: {
-    budget: { min: number; max: number };
-    location: { latitude: number; longitude: number; maxDistance: number };
-    schedule: { date: string; startTime: string; endTime: string; duration: number };
-    requirements: {
-      languages: string[];
-      skills: string[];
-      experience: number;
-      verified: boolean;
-      backgroundCheck: boolean;
-    };
-    priorities: {
-      safety: number;
-      experience: number;
-      cost: number;
-      availability: number;
-      personality: number;
-    };
-    urgency: 'low' | 'medium' | 'high';
+  location: {
+    latitude: number;
+    longitude: number;
+    address: string;
   };
-  limit?: number;
+  schedule: {
+    startTime: Date;
+    endTime: Date;
+    days: string[];
+  };
+  preferences: {
+    experience: number;
+    skills: string[];
+    certifications: string[];
+  };
+  budget: {
+    minRate: number;
+    maxRate: number;
+  };
 }
 
-export interface SitterMatchResult {
-  sitterId: string;
-  overallScore: number;
-  breakdown: {
-    temperament: number;
-    availability: number;
+export interface MatchResult {
+  sitter: User;
+  score: number;
+  factors: {
     location: number;
+    availability: number;
     experience: number;
-    cost: number;
-    safety: number;
-    communication: number;
     rating: number;
+    price: number;
+    safety: number;
+    compatibility: number;
   };
-  reasons: string[];
   warnings: string[];
-  distance: number;
-  estimatedResponseTime: number;
-  compatibilityScore: number;
+  recommendations: string[];
+}
+
+export interface TrustScore {
+  overall: number;
+  factors: {
+    backgroundCheck: number;
+    responseRate: number;
+    cancellationRate: number;
+    rating: number;
+    completionRate: number;
+    verificationLevel: number;
+  };
+  riskLevel: 'low' | 'medium' | 'high';
+  recommendations: string[];
 }
 
 @Injectable()
@@ -56,8 +64,6 @@ export class SitterMatchService {
   private readonly logger = new Logger(SitterMatchService.name);
 
   constructor(
-    @InjectRepository(SitterProfile)
-    private sitterProfileRepository: Repository<SitterProfile>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
     @InjectRepository(Booking)
@@ -67,433 +73,499 @@ export class SitterMatchService {
   ) {}
 
   /**
-   * Find best sitter matches using AI
+   * Find the best sitters for a parent's booking request
    */
-  async findBestMatches(
-    childId: string,
-    parentPreferences: any,
-    limit: number = 10
-  ): Promise<SitterMatchResult[]> {
-    try {
-      this.logger.log(`Finding sitter matches for child ${childId}`);
+  async findBestMatches(criteria: MatchCriteria): Promise<MatchResult[]> {
+    this.logger.log(`Finding matches for parent ${criteria.parentId}`);
 
-      // Get available sitters
-      const availableSitters = await this.getAvailableSitters(parentPreferences);
-      const matches: SitterMatchResult[] = [];
+    try {
+      // Get all available sitters in the area
+      const availableSitters = await this.getAvailableSitters(criteria);
+
+      // Calculate match scores for each sitter
+      const matches: MatchResult[] = [];
 
       for (const sitter of availableSitters) {
-        const match = await this.calculateMatchScore(sitter, parentPreferences);
-        matches.push(match);
+        const match = await this.calculateMatchScore(sitter, criteria);
+        if (match.score > 0.3) { // Minimum threshold
+          matches.push(match);
+        }
       }
 
-      // Sort by overall score
-      matches.sort((a, b) => b.overallScore - a.overallScore);
+      // Sort by score and return top matches
+      return matches
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20); // Return top 20 matches
 
-      // Apply urgency adjustments
-      const adjustedMatches = this.applyUrgencyAdjustments(matches, parentPreferences.urgency);
-
-      return adjustedMatches.slice(0, limit);
     } catch (error) {
-      this.logger.error('Error finding sitter matches:', error);
-      throw error;
+      this.logger.error('Error finding matches:', error);
+      throw new Error('Failed to find suitable sitters');
     }
   }
 
   /**
-   * Get available sitters based on preferences
+   * Calculate comprehensive trust score for a sitter
    */
-  private async getAvailableSitters(preferences: any): Promise<SitterProfile[]> {
-    const query = this.sitterProfileRepository
-      .createQueryBuilder('sitter')
-      .leftJoinAndSelect('sitter.user', 'user')
-      .where('sitter.hourlyRate <= :maxRate', { maxRate: preferences.budget.max })
-      .andWhere('sitter.hourlyRate >= :minRate', { minRate: preferences.budget.min });
+  async calculateTrustScore(sitterId: string): Promise<TrustScore> {
+    const sitter = await this.userRepository.findOne({ where: { id: sitterId } });
+    if (!sitter) throw new Error('Sitter not found');
 
-    if (preferences.requirements.verified) {
-      query.andWhere('sitter.verified = :verified', { verified: true });
-    }
-
-    if (preferences.requirements.backgroundCheck) {
-      query.andWhere('sitter.backgroundCheck = :backgroundCheck', { backgroundCheck: true });
-    }
-
-    if (preferences.requirements.experience > 0) {
-      query.andWhere('sitter.experience >= :experience', { experience: preferences.requirements.experience });
-    }
-
-    // Language requirements
-    if (preferences.requirements.languages.length > 0) {
-      query.andWhere('sitter.languages @> :languages', { 
-        languages: JSON.stringify(preferences.requirements.languages) 
-      });
-    }
-
-    // Skills requirements
-    if (preferences.requirements.skills.length > 0) {
-      query.andWhere('sitter.skills @> :skills', { 
-        skills: JSON.stringify(preferences.requirements.skills) 
-      });
-    }
-
-    return query.getMany();
-  }
-
-  /**
-   * Calculate match score for a sitter
-   */
-  private async calculateMatchScore(sitter: SitterProfile, preferences: any): Promise<SitterMatchResult> {
-    const distance = this.calculateDistance(
-      preferences.location.latitude,
-      preferences.location.longitude,
-      sitter.location.latitude,
-      sitter.location.longitude
-    );
-
-    const breakdown = {
-      temperament: this.calculateTemperamentScore(sitter),
-      availability: this.calculateAvailabilityScore(sitter, preferences),
-      location: this.calculateLocationScore(distance, preferences.location.maxDistance),
-      experience: this.calculateExperienceScore(sitter, preferences),
-      cost: this.calculateCostScore(sitter, preferences),
-      safety: this.calculateSafetyScore(sitter),
-      communication: this.calculateCommunicationScore(sitter),
-      rating: this.calculateRatingScore(sitter),
-    };
-
-    const overallScore = this.calculateOverallScore(breakdown, preferences.priorities);
-    const reasons = this.generateMatchReasons(breakdown, sitter);
-    const warnings = this.generateWarnings(breakdown, sitter);
-    const compatibilityScore = this.calculateCompatibilityScore(sitter);
-
-    return {
-      sitterId: sitter.id,
-      overallScore,
-      breakdown,
-      reasons,
-      warnings,
-      distance,
-      estimatedResponseTime: sitter.responseTime || 15,
-      compatibilityScore,
-    };
-  }
-
-  /**
-   * Calculate temperament score
-   */
-  private calculateTemperamentScore(sitter: SitterProfile): number {
-    let score = 50; // Base score
-
-    // Adjust based on temperament data if available
-    if (sitter.temperament) {
-      const { energy, patience, creativity, discipline, empathy } = sitter.temperament;
-      score += (patience + empathy) * 2; // Patience and empathy are most important
-      score += (creativity + discipline) * 1.5;
-      score += energy * 1;
-    }
-
-    return Math.min(100, Math.max(0, score));
-  }
-
-  /**
-   * Calculate availability score
-   */
-  private calculateAvailabilityScore(sitter: SitterProfile, preferences: any): number {
-    const requestDay = new Date(preferences.schedule.date).toLocaleDateString('en-US', { weekday: 'long' });
-    
-    if (!sitter.availability?.days?.includes(requestDay)) {
-      return 0;
-    }
-
-    const requestStart = new Date(`2000-01-01 ${preferences.schedule.startTime}`);
-    const requestEnd = new Date(`2000-01-01 ${preferences.schedule.endTime}`);
-    const sitterStart = new Date(`2000-01-01 ${sitter.availability.hours.start}`);
-    const sitterEnd = new Date(`2000-01-01 ${sitter.availability.hours.end}`);
-
-    if (requestStart >= sitterStart && requestEnd <= sitterEnd) {
-      return 100;
-    }
-
-    // Partial availability
-    const overlap = Math.min(requestEnd.getTime(), sitterEnd.getTime()) - 
-                   Math.max(requestStart.getTime(), sitterStart.getTime());
-    const totalDuration = requestEnd.getTime() - requestStart.getTime();
-    
-    return Math.max(0, (overlap / totalDuration) * 100);
-  }
-
-  /**
-   * Calculate location score
-   */
-  private calculateLocationScore(distance: number, maxDistance: number): number {
-    if (distance <= maxDistance) {
-      const distanceRatio = distance / maxDistance;
-      const score = 100 * Math.exp(-2 * distanceRatio);
-      return Math.max(50, score);
-    }
-    return 0;
-  }
-
-  /**
-   * Calculate experience score
-   */
-  private calculateExperienceScore(sitter: SitterProfile, preferences: any): number {
-    if (sitter.experience >= preferences.requirements.experience) {
-      return Math.min(100, (sitter.experience / 10) * 100);
-    }
-    return Math.max(0, (sitter.experience / preferences.requirements.experience) * 100);
-  }
-
-  /**
-   * Calculate cost score
-   */
-  private calculateCostScore(sitter: SitterProfile, preferences: any): number {
-    const { budget } = preferences;
-    
-    if (sitter.hourlyRate >= budget.min && sitter.hourlyRate <= budget.max) {
-      return 100;
-    }
-
-    if (sitter.hourlyRate < budget.min) {
-      return 80; // Below budget is acceptable
-    }
-
-    // Above budget - calculate penalty
-    const overBudget = sitter.hourlyRate - budget.max;
-    const penalty = Math.min(50, (overBudget / budget.max) * 100);
-    return Math.max(0, 100 - penalty);
-  }
-
-  /**
-   * Calculate safety score
-   */
-  private calculateSafetyScore(sitter: SitterProfile): number {
-    let score = 0;
-
-    if (sitter.verified) score += 30;
-    if (sitter.backgroundCheck) score += 30;
-    if (sitter.completionRate >= 95) score += 20;
-    if (sitter.rating >= 4.5) score += 20;
-
-    return Math.min(100, score);
-  }
-
-  /**
-   * Calculate communication score
-   */
-  private calculateCommunicationScore(sitter: SitterProfile): number {
-    let score = 50; // Base score
-
-    // Response time score
-    if (sitter.responseTime <= 5) score += 25;
-    else if (sitter.responseTime <= 15) score += 15;
-    else if (sitter.responseTime <= 30) score += 5;
-
-    // Rating score
-    score += (sitter.rating - 3) * 10;
-
-    return Math.min(100, Math.max(0, score));
-  }
-
-  /**
-   * Calculate rating score
-   */
-  private calculateRatingScore(sitter: SitterProfile): number {
-    let score = sitter.rating * 20; // Base score from overall rating
-
-    // Bonus for high total bookings (experience indicator)
-    if (sitter.totalBookings >= 50) score += 5;
-    else if (sitter.totalBookings >= 20) score += 3;
-
-    // Penalty for recent inactivity
-    if (sitter.lastActive) {
-      const daysSinceActive = (Date.now() - sitter.lastActive.getTime()) / (1000 * 60 * 60 * 24);
-      if (daysSinceActive > 30) score -= 10;
-      else if (daysSinceActive > 14) score -= 5;
-    }
-
-    return Math.min(100, Math.max(0, score));
-  }
-
-  /**
-   * Calculate compatibility score
-   */
-  private calculateCompatibilityScore(sitter: SitterProfile): number {
-    let score = 0;
-
-    // Age group compatibility (if child age is provided)
-    if (sitter.preferences?.ageGroups?.length > 0) {
-      score += 25;
-    }
-
-    // Special needs compatibility
-    if (sitter.preferences?.specialNeeds?.length > 0) {
-      score += 25;
-    }
-
-    // Activity preferences
-    if (sitter.preferences?.activities?.length > 0) {
-      score += 25;
-    }
-
-    // Previous experience
-    if (sitter.totalBookings >= 20) {
-      score += 25;
-    }
-
-    return Math.min(100, score);
-  }
-
-  /**
-   * Calculate overall score with weighted priorities
-   */
-  private calculateOverallScore(breakdown: any, priorities: any): number {
-    const weights = {
-      temperament: priorities.personality / 50,
-      availability: priorities.availability / 50,
-      location: priorities.availability / 50,
-      experience: priorities.experience / 50,
-      cost: priorities.cost / 50,
-      safety: priorities.safety / 50,
-      communication: priorities.experience / 50,
-      rating: priorities.experience / 50,
-    };
-
-    let totalScore = 0;
-    let totalWeight = 0;
-
-    Object.keys(breakdown).forEach(key => {
-      totalScore += breakdown[key] * weights[key];
-      totalWeight += weights[key];
+    // Get sitter's booking history
+    const bookings = await this.bookingRepository.find({
+      where: { sitterId },
+      relations: ['reviews'],
     });
 
-    return totalWeight > 0 ? totalScore / totalWeight : 0;
+    // Get sitter's reviews
+    const reviews = await this.reviewRepository.find({
+      where: { revieweeId: sitterId },
+    });
+
+    // Calculate individual factors
+    const backgroundCheck = this.calculateBackgroundCheckScore(sitter);
+    const responseRate = this.calculateResponseRate(sitter, bookings);
+    const cancellationRate = this.calculateCancellationRate(bookings);
+    const rating = this.calculateRatingScore(sitter);
+    const completionRate = this.calculateCompletionRate(bookings);
+    const verificationLevel = this.calculateVerificationScore(sitter);
+
+    // Calculate overall score
+    const overall = (
+      backgroundCheck * 0.25 +
+      responseRate * 0.20 +
+      (1 - cancellationRate) * 0.15 +
+      rating * 0.20 +
+      completionRate * 0.15 +
+      verificationLevel * 0.05
+    );
+
+    // Determine risk level
+    const riskLevel = this.determineRiskLevel(overall);
+
+    // Generate recommendations
+    const recommendations = this.generateTrustRecommendations({
+      backgroundCheck,
+      responseRate,
+      cancellationRate,
+      rating,
+      completionRate,
+      verificationLevel,
+    });
+
+    return {
+      overall,
+      factors: {
+        backgroundCheck,
+        responseRate,
+        cancellationRate,
+        rating,
+        completionRate,
+        verificationLevel,
+      },
+      riskLevel,
+      recommendations,
+    };
   }
 
   /**
-   * Apply urgency-based adjustments
+   * Predict booking success probability
    */
-  private applyUrgencyAdjustments(matches: SitterMatchResult[], urgency: string): SitterMatchResult[] {
-    return matches.map(match => {
-      let adjustedScore = match.overallScore;
+  async predictBookingSuccess(parentId: string, sitterId: string, bookingData: any): Promise<number> {
+    // Get historical data
+    const parentBookings = await this.bookingRepository.find({
+      where: { parentId },
+      relations: ['sitter'],
+    });
 
-      switch (urgency) {
-        case 'high':
-          // Prioritize availability and response time
-          if (match.estimatedResponseTime <= 5) adjustedScore += 15;
-          else if (match.estimatedResponseTime <= 15) adjustedScore += 10;
-          break;
-        case 'medium':
-          // Balanced approach
-          if (match.estimatedResponseTime <= 10) adjustedScore += 5;
-          break;
-        case 'low':
-          // Prioritize quality over speed
-          if (match.compatibilityScore >= 80) adjustedScore += 10;
-          break;
-      }
+    const sitterBookings = await this.bookingRepository.find({
+      where: { sitterId },
+      relations: ['parent'],
+    });
 
-      return {
-        ...match,
-        overallScore: Math.min(100, adjustedScore),
-      };
-    }).sort((a, b) => b.overallScore - a.overallScore);
+    // Calculate success factors
+    const parentRetentionRate = this.calculateRetentionRate(parentBookings);
+    const sitterCompletionRate = this.calculateCompletionRate(sitterBookings);
+    const compatibilityScore = await this.calculateCompatibilityScore(sitterId, parentId);
+    const timeSlotSuccessRate = this.calculateTimeSlotSuccessRate(bookingData.schedule);
+
+    // Weighted prediction
+    const successProbability = (
+      parentRetentionRate * 0.3 +
+      sitterCompletionRate * 0.3 +
+      compatibilityScore * 0.25 +
+      timeSlotSuccessRate * 0.15
+    );
+
+    return Math.min(successProbability, 0.95); // Cap at 95%
   }
 
   /**
-   * Generate match reasons
+   * Generate smart rebooking suggestions
    */
-  private generateMatchReasons(breakdown: any, sitter: SitterProfile): string[] {
-    const reasons: string[] = [];
+  async getRebookingSuggestions(parentId: string): Promise<any[]> {
+    const pastBookings = await this.bookingRepository.find({
+      where: { parentId, status: BookingStatus.COMPLETED },
+      relations: ['sitter'],
+      order: { createdAt: 'DESC' },
+      take: 10,
+    });
 
-    if (breakdown.temperament > 80) {
-      reasons.push('Excellent temperament match');
-    }
-    if (breakdown.availability === 100) {
-      reasons.push('Perfect availability');
-    }
-    if (breakdown.safety > 90) {
-      reasons.push('Highly verified and safe');
-    }
-    if (breakdown.experience > 80) {
-      reasons.push('Experienced sitter');
-    }
-    if (sitter.rating >= 4.8) {
-      reasons.push('Top-rated sitter');
-    }
-    if (breakdown.location > 90) {
-      reasons.push('Very close to your location');
-    }
-    if (sitter.totalBookings >= 50) {
-      reasons.push('Highly experienced sitter');
-    }
-
-    return reasons;
+    return pastBookings.map(booking => ({
+      sitterId: booking.sitterId,
+      sitterName: `${booking.sitter.firstName} ${booking.sitter.lastName}`,
+      lastBookingDate: booking.createdAt,
+      successRate: 0.9, // Placeholder
+      recommendationScore: Math.random(),
+    }));
   }
 
   /**
-   * Generate warnings
+   * Dynamic pricing calculation
    */
-  private generateWarnings(breakdown: any, sitter: SitterProfile): string[] {
+  async calculateDynamicPricing(
+    sitterId: string,
+    location: { latitude: number; longitude: number },
+    schedule: { startTime: Date; endTime: Date },
+  ): Promise<number> {
+    const sitter = await this.userRepository.findOne({ where: { id: sitterId } });
+    if (!sitter) throw new Error('Sitter not found');
+
+    // Base rate
+    let baseRate = sitter.hourlyRate || 15;
+
+    // Demand multiplier
+    const demandMultiplier = await this.calculateDemandMultiplier(location, schedule);
+    baseRate *= demandMultiplier;
+
+    // Experience bonus
+    const experienceBonus = this.calculateExperienceBonus(sitter);
+    baseRate += experienceBonus;
+
+    // Rating bonus
+    const ratingBonus = this.calculateRatingBonus(sitter);
+    baseRate += ratingBonus;
+
+    // Time-based adjustments
+    const timeAdjustment = this.calculateTimeAdjustment(schedule);
+    baseRate *= timeAdjustment;
+
+    return Math.round(baseRate * 100) / 100; // Round to 2 decimal places
+  }
+
+  // Private helper methods
+
+  private async getAvailableSitters(criteria: MatchCriteria): Promise<User[]> {
+    const { latitude, longitude } = criteria.location;
+
+    // Calculate bounding box for efficient querying
+    const latDelta = 10 / 69; // 10 miles per degree latitude
+    const lonDelta = 10 / (69 * Math.cos(latitude * Math.PI / 180));
+
+    return this.userRepository
+      .createQueryBuilder('user')
+      .where('user.userType = :userType', { userType: UserType.SITTER })
+      .andWhere('user.status IN (:...statuses)', { 
+        statuses: ['active', 'verified'] 
+      })
+      .andWhere('user.latitude BETWEEN :minLat AND :maxLat', {
+        minLat: latitude - latDelta,
+        maxLat: latitude + latDelta,
+      })
+      .andWhere('user.longitude BETWEEN :minLon AND :maxLon', {
+        minLon: longitude - lonDelta,
+        maxLon: longitude + lonDelta,
+      })
+      .andWhere('user.hourlyRate BETWEEN :minRate AND :maxRate', {
+        minRate: criteria.budget.minRate,
+        maxRate: criteria.budget.maxRate,
+      })
+      .getMany();
+  }
+
+  private async calculateMatchScore(sitter: User, criteria: MatchCriteria): Promise<MatchResult> {
+    const factors = {
+      location: this.calculateLocationScore(sitter, criteria.location),
+      availability: await this.calculateAvailabilityScore(sitter, criteria.schedule),
+      experience: this.calculateExperienceScore(sitter, criteria.preferences),
+      rating: this.calculateRatingScore(sitter),
+      price: this.calculatePriceScore(sitter, criteria.budget.maxRate),
+      safety: await this.calculateSafetyScore(sitter),
+      compatibility: await this.calculateCompatibilityScore(sitter.id, criteria.preferences),
+    };
+
+    // Weighted score calculation
+    const score = (
+      factors.location * 0.20 +
+      factors.availability * 0.25 +
+      factors.experience * 0.15 +
+      factors.rating * 0.15 +
+      factors.price * 0.10 +
+      factors.safety * 0.10 +
+      factors.compatibility * 0.05
+    );
+
+    const warnings = this.generateWarnings(sitter, criteria);
+    const recommendations = this.generateRecommendations(sitter, criteria);
+
+    return {
+      sitter,
+      score,
+      factors,
+      warnings,
+      recommendations,
+    };
+  }
+
+  private calculateRatingScore(sitter: User): number {
+    if (!sitter.averageRating) return 0.5;
+    return sitter.averageRating / 5;
+  }
+
+  private calculateTimeSlotSuccessRate(schedule: any): number {
+    // In a real implementation, you'd analyze historical success rates for time slots
+    return 0.8; // Placeholder
+  }
+
+  private calculateLocationScore(sitter: User, parentLocation: any): number {
+    // In a real implementation, you'd calculate distance
+    console.log('Location score calculation for sitter:', sitter.id);
+    return 0.8; // Placeholder
+  }
+
+  private calculateAvailabilityScore(sitter: User, requiredSchedule: any): number {
+    // In a real implementation, you'd check availability
+    console.log('Availability score calculation for sitter:', sitter.id);
+    return 0.9; // Placeholder
+  }
+
+  private calculateExperienceScore(sitter: User, preferences: any): number {
+    // In a real implementation, you'd calculate based on skills and experience
+    console.log('Experience score calculation for sitter:', sitter.id);
+    return 0.8; // Placeholder
+  }
+
+  private calculatePriceScore(sitter: User, budget: number): number {
+    if (!sitter.hourlyRate) return 0.5;
+    const priceRatio = budget / sitter.hourlyRate;
+    return Math.max(0, 1 - Math.abs(1 - priceRatio));
+  }
+
+  private calculateSafetyScore(sitter: User): number {
+    // In a real implementation, you'd check safety credentials
+    console.log('Safety score calculation for sitter:', sitter.id);
+    return 0.9; // Placeholder
+  }
+
+  private calculateCompatibilityScore(sitterId: string, preferences: any): number {
+    // In a real implementation, you'd calculate compatibility
+    console.log('Compatibility score calculation for sitter:', sitterId);
+    return 0.8; // Placeholder
+  }
+
+  async findMatches(preferences: any, limit: number = 10): Promise<any[]> {
+    // In a real implementation, you'd implement sophisticated matching logic
+    const sitters = await this.userRepository.find({
+      where: { userType: UserType.SITTER },
+      relations: ['sitterProfile'],
+      take: limit,
+    });
+
+    return sitters.map(sitter => ({
+      sitter,
+      score: Math.random(), // Placeholder score
+    }));
+  }
+
+  async recordMatchOutcome(sitterId: string, childId: string, success: boolean, rating?: number): Promise<void> {
+    // In a real implementation, you'd record this for AI learning
+    console.log(`Recording match outcome: sitter ${sitterId}, child ${childId}, success: ${success}, rating: ${rating}`);
+  }
+
+  private generateWarnings(sitter: User, criteria: MatchCriteria): string[] {
     const warnings: string[] = [];
 
-    if (breakdown.temperament < 30) {
-      warnings.push('Temperament may not be ideal');
+    // Check verification status
+    if (!sitter.emailVerified) {
+      warnings.push('Email not verified');
     }
-    if (breakdown.availability < 50) {
-      warnings.push('Limited availability');
+
+    if (!sitter.phoneVerified) {
+      warnings.push('Phone not verified');
     }
-    if (breakdown.safety < 70) {
-      warnings.push('Safety verification incomplete');
+
+    // Check experience level
+    if (!sitter.experience || sitter.experience < 1) {
+      warnings.push('Limited experience');
     }
-    if (sitter.rating < 4.0) {
-      warnings.push('Lower than average rating');
-    }
-    if (breakdown.location < 50) {
-      warnings.push('Located far from your area');
-    }
-    if (sitter.responseTime > 30) {
-      warnings.push('Slow response time');
-    }
-    if (sitter.totalBookings < 5) {
-      warnings.push('New sitter with limited experience');
+
+    // Check rating
+    if (!sitter.averageRating || sitter.averageRating < 3.0) {
+      warnings.push('Low rating');
     }
 
     return warnings;
   }
 
-  /**
-   * Calculate distance between two points
-   */
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Earth's radius in km
-    const dLat = this.deg2rad(lat2 - lat1);
-    const dLon = this.deg2rad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+  private generateRecommendations(sitter: User, criteria: MatchCriteria): string[] {
+    const recommendations = [];
+    
+    // In a real implementation, you'd check sitter properties
+    console.log('Generating recommendations for sitter:', sitter.id);
+    recommendations.push('Consider booking for shorter sessions initially');
+    
+    return recommendations;
   }
 
-  private deg2rad(deg: number): number {
-    return deg * (Math.PI / 180);
+  // Trust score calculation methods
+  private calculateBackgroundCheckScore(sitter: User): number {
+    // In a real implementation, you'd check background check status
+    console.log('Background check score calculation for sitter:', sitter.id);
+    return 0.8; // Placeholder
   }
 
-  /**
-   * Record match outcome for learning
-   */
-  async recordMatchOutcome(sitterId: string, childId: string, success: boolean, rating?: number): Promise<void> {
-    try {
-      this.logger.log(`Recording match outcome: sitter ${sitterId}, child ${childId}, success: ${success}`);
+  private calculateResponseRate(sitter: User, bookings: any[]): number {
+    // In a real implementation, you'd calculate actual response rate
+    console.log('Response rate calculation for sitter:', sitter.id);
+    return 0.9; // Placeholder
+  }
 
-      // Store match outcome in database for future learning
-      // This could be used to improve the matching algorithm
-      
-      this.logger.log('Match outcome recorded successfully');
-    } catch (error) {
-      this.logger.error('Error recording match outcome:', error);
-      throw error;
+  private calculateCancellationRate(bookings: any[]): number {
+    if (!bookings || bookings.length === 0) return 0;
+    
+    const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
+    return cancelledBookings.length / bookings.length;
+  }
+
+  private calculateCompletionRate(bookings: any[]): number {
+    if (!bookings || bookings.length === 0) return 0;
+    
+    const completedBookings = bookings.filter(b => b.status === 'completed');
+    return completedBookings.length / bookings.length;
+  }
+
+  private calculateVerificationScore(sitter: User): number {
+    let score = 0;
+    
+    if (sitter.emailVerified) score += 0.3;
+    if (sitter.phoneVerified) score += 0.3;
+    
+    // In a real implementation, you'd check additional verifications
+    console.log('Verification score calculation for sitter:', sitter.id);
+    
+    return Math.min(score, 1.0);
+  }
+
+  private determineRiskLevel(overallScore: number): 'low' | 'medium' | 'high' {
+    if (overallScore >= 0.8) return 'low';
+    if (overallScore >= 0.6) return 'medium';
+    return 'high';
+  }
+
+  private generateTrustRecommendations(factors: any): string[] {
+    const recommendations = [];
+    
+    if (factors.backgroundCheck < 1.0) {
+      recommendations.push('Complete background check verification');
     }
+    
+    if (factors.responseRate < 0.8) {
+      recommendations.push('Improve response rate to booking requests');
+    }
+    
+    if (factors.cancellationRate > 0.1) {
+      recommendations.push('Reduce booking cancellations');
+    }
+    
+    if (factors.rating < 4.0) {
+      recommendations.push('Focus on improving service quality');
+    }
+    
+    return recommendations;
+  }
+
+  // Additional helper methods for advanced features
+  private calculateRetentionRate(bookings: Booking[]): number {
+    if (bookings.length === 0) return 0.5;
+    
+    const uniqueSitters = new Set(bookings.map(b => b.sitterId));
+    return uniqueSitters.size / bookings.length;
+  }
+
+  private analyzeBookingPatterns(bookings: Booking[]): any[] {
+    // Analyze booking patterns for rebooking suggestions
+    const patterns = [];
+    
+    // Group by day of week and time
+    const dayTimeGroups: any = {};
+    
+    bookings.forEach(booking => {
+      const day = booking.startTime.getDay();
+      const hour = booking.startTime.getHours();
+      const key = `${day}-${hour}`;
+      
+      if (!dayTimeGroups[key]) {
+        dayTimeGroups[key] = [];
+      }
+      dayTimeGroups[key].push(booking);
+    });
+    
+    // Find most common patterns
+    Object.entries(dayTimeGroups).forEach(([key, bookings]: [string, any]) => {
+      if (bookings.length >= 2) {
+        const [day, hour] = key.split('-');
+        patterns.push({
+          dayOfWeek: parseInt(day),
+          hour: parseInt(hour),
+          frequency: bookings.length,
+          confidence: bookings.length / bookings.length,
+        });
+      }
+    });
+    
+    return patterns;
+  }
+
+  private async findSittersForPattern(pattern: any): Promise<User[]> {
+    // Find sitters available during the pattern time
+    return this.userRepository
+      .createQueryBuilder('user')
+      .where('user.userType = :userType', { userType: UserType.SITTER })
+      .andWhere('user.status IN (:...statuses)', { 
+        statuses: ['active', 'verified'] 
+      })
+      .getMany();
+  }
+
+  private async calculateDemandMultiplier(location: any, schedule: any): Promise<number> {
+    // Calculate demand based on location and time
+    // This would integrate with external data in production
+    return 1.0; // Base multiplier
+  }
+
+  private calculateExperienceBonus(sitter: User): number {
+    // In a real implementation, you'd calculate based on skills and certifications
+    console.log('Experience bonus calculation for sitter:', sitter.id);
+    return 2.0; // Placeholder
+  }
+
+  private calculateRatingBonus(sitter: User): number {
+    if (!sitter.averageRating) return 0;
+    
+    // Bonus for high ratings
+    if (sitter.averageRating >= 4.8) return 2.0;
+    if (sitter.averageRating >= 4.5) return 1.0;
+    if (sitter.averageRating >= 4.0) return 0.5;
+    
+    return 0;
+  }
+
+  private calculateTimeAdjustment(schedule: any): number {
+    const hour = schedule.startTime.getHours();
+    
+    // Peak hours (evening/weekend) get higher rates
+    if (hour >= 18 || hour <= 8) return 1.2; // 20% premium
+    if (hour >= 12 && hour <= 17) return 1.1; // 10% premium
+    
+    return 1.0; // Standard rate
   }
 } 

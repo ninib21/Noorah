@@ -5,7 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
-import { JwtPayload } from '../auth.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -17,25 +16,25 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'your-secret-key',
+      secretOrKey: configService.get('JWT_SECRET'),
     });
   }
 
-  async validate(payload: JwtPayload): Promise<any> {
-    const user = await this.userRepository.findOne({
-      where: { id: payload.sub },
-    });
+  async validate(payload: any) {
+    const user = await this.userRepository.findOne({ where: { id: payload.sub } });
+    
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException('User not found or inactive');
+    if (user.status !== 'active') {
+      throw new UnauthorizedException('Account is not active');
     }
 
     return {
       id: user.id,
       email: user.email,
       userType: user.userType,
-      mfaEnabled: user.mfaEnabled,
-      mfaVerified: payload.mfaVerified,
     };
   }
 } 

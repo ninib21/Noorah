@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { ActivityIndicator } from 'react-native';
 import Button from './Button';
 
 describe('Button Component', () => {
@@ -76,13 +77,16 @@ describe('Button Component', () => {
   });
 
   it('shows loading state when loading prop is true', () => {
-    const { getByText, queryByText } = render(
+    const { queryByText, UNSAFE_getByType } = render(
       <Button {...defaultProps} loading={true} />
     );
     
-    // Should show loading text instead of title
+    // Should not show title text when loading
     expect(queryByText('Test Button')).toBeFalsy();
-    expect(getByText('Loading...')).toBeTruthy();
+    
+    // Should show ActivityIndicator when loading
+    const activityIndicator = UNSAFE_getByType(ActivityIndicator);
+    expect(activityIndicator).toBeTruthy();
   });
 
   it('renders with custom styles', () => {

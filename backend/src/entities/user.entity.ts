@@ -4,19 +4,36 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToOne,
   OneToMany,
-  ManyToOne,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import { SitterProfile } from './sitter-profile.entity';
 import { ParentProfile } from './parent-profile.entity';
 import { Booking } from './booking.entity';
 import { Review } from './review.entity';
+import { Payment } from './payment.entity';
+import { Message } from './message.entity';
+import { VerificationDocument } from './verification-document.entity';
+import { Notification } from './notification.entity';
 
 export enum UserType {
   PARENT = 'parent',
   SITTER = 'sitter',
   ADMIN = 'admin',
+}
+
+export enum UserStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SUSPENDED = 'suspended',
+  PENDING = 'pending',
+}
+
+export enum SubscriptionTier {
+  FREE = 'free',
+  PLUS = 'plus',
+  PREMIUM = 'premium',
 }
 
 @Entity('users')
@@ -27,11 +44,17 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ unique: true, nullable: true })
+  @Column({ nullable: true })
   phone: string;
 
-  @Column({ nullable: true })
-  passwordHash: string;
+  @Column()
+  password: string;
+
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
 
   @Column({
     type: 'enum',
@@ -40,58 +63,67 @@ export class User {
   })
   userType: UserType;
 
-  @Column()
-  firstName: string;
+  @Column({
+    type: 'enum',
+    enum: UserStatus,
+    default: UserStatus.ACTIVE,
+  })
+  status: UserStatus;
 
-  @Column()
-  lastName: string;
+  @Column({
+    type: 'enum',
+    enum: SubscriptionTier,
+    default: SubscriptionTier.FREE,
+  })
+  subscriptionTier: SubscriptionTier;
 
   @Column({ nullable: true })
-  profileImageUrl: string;
+  profilePicture: string;
+
+  @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
+  averageRating: number;
+
+  @Column({ type: 'int', default: 0 })
+  totalReviews: number;
+
+  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  hourlyRate: number;
+
+  @Column({ type: 'int', nullable: true })
+  experience: number;
 
   @Column({ default: false })
-  isVerified: boolean;
+  emailVerified: boolean;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column({ default: false })
+  phoneVerified: boolean;
+
+  @Column({ nullable: true })
+  verificationToken: string;
+
+  @Column({ nullable: true })
+  verificationExpires: Date;
+
+  @Column({ nullable: true })
+  resetPasswordToken: string;
+
+  @Column({ nullable: true })
+  resetPasswordExpires: Date;
 
   @Column({ nullable: true })
   lastLoginAt: Date;
 
-  // Email verification
-  @Column({ default: false })
-  isEmailVerified: boolean;
-
-  @Column({ default: false })
-  isPhoneVerified: boolean;
-
-  // MFA settings
-  @Column({ default: false })
-  mfaEnabled: boolean;
-
   @Column({ nullable: true })
-  mfaSecret: string;
+  lastActiveAt: Date;
 
-  // OTP fields
-  @Column({ nullable: true })
-  otpHash: string;
+  @Column({ type: 'text', nullable: true })
+  preferences: string; // JSON object
 
-  @Column({ nullable: true })
-  otpExpiry: Date;
+  @Column({ type: 'text', nullable: true })
+  settings: string; // JSON object
 
-  // Password reset fields
-  @Column({ nullable: true })
-  resetTokenHash: string;
-
-  @Column({ nullable: true })
-  resetTokenExpiry: Date;
-
-  // Email verification fields
-  @Column({ nullable: true })
-  emailVerificationTokenHash: string;
-
-  @Column({ nullable: true })
-  emailVerificationExpiry: Date;
+  @Column({ type: 'text', nullable: true })
+  metadata: string; // JSON object
 
   @CreateDateColumn()
   createdAt: Date;
@@ -100,25 +132,57 @@ export class User {
   updatedAt: Date;
 
   // Relationships
-  @OneToOne(() => SitterProfile, (sitterProfile) => sitterProfile.user, {
-    cascade: true,
-  })
+  @OneToOne(() => SitterProfile, sitterProfile => sitterProfile.user)
   sitterProfile: SitterProfile;
 
-  @OneToOne(() => ParentProfile, (parentProfile) => parentProfile.user, {
-    cascade: true,
-  })
+  @OneToOne(() => ParentProfile, parentProfile => parentProfile.user)
   parentProfile: ParentProfile;
 
-  @OneToMany(() => Booking, (booking) => booking.parent)
+  @OneToMany(() => Booking, booking => booking.parent)
   parentBookings: Booking[];
 
-  @OneToMany(() => Booking, (booking) => booking.sitter)
+  @OneToMany(() => Booking, booking => booking.sitter)
   sitterBookings: Booking[];
 
-  @OneToMany(() => Review, (review) => review.reviewer)
+  @OneToMany(() => Review, review => review.reviewer)
   reviewsGiven: Review[];
 
-  @OneToMany(() => Review, (review) => review.reviewee)
+  @OneToMany(() => Review, review => review.reviewee)
   reviewsReceived: Review[];
+
+  @OneToMany(() => Payment, payment => payment.user)
+  payments: Payment[];
+
+  @OneToMany(() => Message, message => message.sender)
+  sentMessages: Message[];
+
+  @OneToMany(() => Message, message => message.receiver)
+  receivedMessages: Message[];
+
+  @OneToMany(() => VerificationDocument, doc => doc.user)
+  verificationDocuments: VerificationDocument[];
+
+  @OneToMany(() => Notification, notification => notification.user)
+  notifications: Notification[];
+
+  // Helper methods
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
+
+  get isVerified(): boolean {
+    return this.emailVerified && this.phoneVerified;
+  }
+
+  get isPremium(): boolean {
+    return this.subscriptionTier === SubscriptionTier.PREMIUM;
+  }
+
+  get isActive(): boolean {
+    return this.status === UserStatus.ACTIVE;
+  }
+
+  get hasProfile(): boolean {
+    return this.userType === UserType.SITTER ? !!this.sitterProfile : !!this.parentProfile;
+  }
 } 

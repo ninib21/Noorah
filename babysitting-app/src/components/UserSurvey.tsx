@@ -151,7 +151,7 @@ const UserSurvey: React.FC<UserSurveyProps> = ({
           {
             id: 'monthly_1',
             type: 'rating',
-            question: 'Overall, how satisfied are you with GuardianNest?',
+            question: 'Overall, how satisfied are you with NannyRadar?',
             required: true,
             order: 1,
           },

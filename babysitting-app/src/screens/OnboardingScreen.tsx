@@ -11,7 +11,7 @@ const OnboardingScreen: React.FC = () => {
         style={styles.gradient}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>Onboarding Screen</Text>
+          <Text style={styles.title}>Welcome to NannyRadar</Text>
           <Text style={styles.subtitle}>Coming Soon!</Text>
         </View>
       </LinearGradient>

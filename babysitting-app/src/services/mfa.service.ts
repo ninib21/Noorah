@@ -1,5 +1,5 @@
-import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
+import * as SecureStore from 'expo-secure-store';
 
 export interface MFASecret {
   secret: string;
@@ -28,30 +28,31 @@ class MFAService {
   private readonly TOTP_DIGITS = 6;
 
   /**
-   * Generate a new MFA secret
+   * Generate MFA secret for user
    */
   async generateSecret(userId: string, userEmail: string): Promise<MFASetupResult> {
     try {
-      // Generate a random secret (32 bytes = 256 bits)
-      const secretBytes = await Crypto.getRandomBytesAsync(32);
+      // Generate random secret
+      const secretBytes = await Crypto.getRandomBytesAsync(20);
       const secret = this.base32Encode(secretBytes);
-      
+
       // Generate backup codes
       const backupCodes = await this.generateBackupCodes();
-      
-      // Create QR code URL for authenticator apps
-      const qrCode = this.generateQRCode(secret, userEmail);
-      
-      // Store secret securely
+
+      // Create MFA secret object
       const mfaSecret: MFASecret = {
         secret,
         backupCodes,
         createdAt: new Date(),
         isEnabled: false,
       };
-      
+
+      // Store in secure storage
       await SecureStore.setItemAsync(`${this.SECRET_KEY}_${userId}`, JSON.stringify(mfaSecret));
-      
+
+      // Generate QR code URL
+      const qrCode = this.generateQRCode(secret, userEmail);
+
       return {
         success: true,
         secret,
@@ -73,10 +74,10 @@ class MFAService {
   async verifyTOTP(userId: string, code: string): Promise<MFAVerifyResult> {
     try {
       const mfaSecret = await this.getMFASecret(userId);
-      if (!mfaSecret || !mfaSecret.isEnabled) {
+      if (!mfaSecret) {
         return {
           success: false,
-          error: 'MFA not enabled',
+          error: 'MFA secret not found',
         };
       }
 
@@ -92,22 +93,27 @@ class MFAService {
       const currentTime = Math.floor(Date.now() / 1000);
       const expectedCode = this.generateTOTP(mfaSecret.secret, currentTime);
       
-      // Check current time slot and adjacent slots for clock skew
-      const isValid = [
-        this.generateTOTP(mfaSecret.secret, currentTime - this.TOTP_PERIOD),
-        this.generateTOTP(mfaSecret.secret, currentTime),
-        this.generateTOTP(mfaSecret.secret, currentTime + this.TOTP_PERIOD),
-      ].includes(code);
+      if (code === expectedCode) {
+        return { success: true };
+      }
+
+      // Check previous and next time windows for clock skew
+      const prevCode = this.generateTOTP(mfaSecret.secret, currentTime - this.TOTP_PERIOD);
+      const nextCode = this.generateTOTP(mfaSecret.secret, currentTime + this.TOTP_PERIOD);
+      
+      if (code === prevCode || code === nextCode) {
+        return { success: true };
+      }
 
       return {
-        success: isValid,
-        error: isValid ? undefined : 'Invalid verification code',
+        success: false,
+        error: 'Invalid TOTP code',
       };
     } catch (error) {
       console.error('Error verifying TOTP:', error);
       return {
         success: false,
-        error: 'Failed to verify code',
+        error: 'Failed to verify TOTP code',
       };
     }
   }
@@ -236,7 +242,7 @@ class MFAService {
    * Generate QR code URL for authenticator apps
    */
   private generateQRCode(secret: string, userEmail: string): string {
-    const issuer = 'GuardianNest';
+    const issuer = 'NannyRadar';
     const account = userEmail;
     const url = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=${this.TOTP_DIGITS}&period=${this.TOTP_PERIOD}`;
     return url;
@@ -360,4 +366,4 @@ class MFAService {
   }
 }
 
-export default new MFAService(); 
+export default new MFAService();

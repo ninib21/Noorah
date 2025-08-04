@@ -16,9 +16,15 @@ export enum PaymentMethod {
 }
 
 export class CreatePaymentIntentDto {
-  @ApiProperty({ description: 'Booking ID' })
-  @IsUUID()
-  bookingId: string;
+  @ApiProperty({ description: 'Amount in cents' })
+  @IsNumber()
+  @Min(1)
+  amount: number;
+
+  @ApiProperty({ description: 'Currency code', default: 'usd' })
+  @IsString()
+  @IsOptional()
+  currency?: string;
 
   @ApiPropertyOptional({ description: 'Payment method ID' })
   @IsOptional()

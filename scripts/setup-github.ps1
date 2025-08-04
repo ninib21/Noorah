@@ -20,8 +20,8 @@ try {
     Write-Host "Creating GitHub repository..." -ForegroundColor Yellow
     
     # Create GitHub repository
-    $result = gh repo create nannyradar `
-        --description "Smart babysitting platform connecting parents with trusted sitters" `
+    gh repo create nannyradar `
+        --description "Smart babysitting platform connecting parents with trusted sitters - NannyRadar" `
         --public `
         --source=. `
         --remote=origin `
@@ -41,7 +41,7 @@ try {
     Write-Host "⚠️  GitHub CLI is not installed. You'll need to create the repository manually." -ForegroundColor Yellow
     Write-Host "📝 Please create a new repository at: https://github.com/new" -ForegroundColor White
     Write-Host "   Repository name: nannyradar" -ForegroundColor White
-    Write-Host "   Description: Smart babysitting platform connecting parents with trusted sitters" -ForegroundColor White
+    Write-Host "   Description: Smart babysitting platform connecting parents with trusted sitters - NannyRadar" -ForegroundColor White
     Write-Host "   Make it Public or Private as needed" -ForegroundColor White
     Write-Host ""
     Write-Host "After creating the repository, run these commands:" -ForegroundColor White

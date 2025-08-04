@@ -290,7 +290,7 @@ class FirebaseService {
       }
 
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Authenticate to access GuardianNest',
+        promptMessage: 'Authenticate to access NannyRadar',
         fallbackLabel: 'Use passcode',
         cancelLabel: 'Cancel',
         disableDeviceFallback: false,

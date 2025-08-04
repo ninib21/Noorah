@@ -85,7 +85,7 @@ export class GPSTrackingService {
           timeInterval: 30000, // 30 seconds
           distanceInterval: 10, // 10 meters
           foregroundService: {
-            notificationTitle: 'GuardianNest Tracking',
+            notificationTitle: 'NannyRadar Tracking',
             notificationBody: 'Tracking your location for safety',
             notificationColor: '#3A7DFF',
           },

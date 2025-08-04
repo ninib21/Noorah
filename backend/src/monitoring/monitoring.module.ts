@@ -1,15 +1,9 @@
 import { Module } from '@nestjs/common';
-import { TerminusModule } from '@nestjs/terminus';
-import { HttpModule } from '@nestjs/axios';
-import { HealthController } from './health.controller';
 import { LoggingService } from './logging.service';
 import { MetricsService } from './metrics.service';
+import { HealthController } from './health.controller';
 
 @Module({
-  imports: [
-    TerminusModule,
-    HttpModule,
-  ],
   controllers: [HealthController],
   providers: [LoggingService, MetricsService],
   exports: [LoggingService, MetricsService],

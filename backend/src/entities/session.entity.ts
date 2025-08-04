@@ -11,24 +11,15 @@ import { Booking } from './booking.entity';
 
 export enum SessionStatus {
   ACTIVE = 'active',
-  COMPLETED = 'completed',
-  EMERGENCY = 'emergency',
   PAUSED = 'paused',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
 }
 
 @Entity('sessions')
 export class Session {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column()
-  bookingId: string;
-
-  @Column({ nullable: true })
-  startTime: Date;
-
-  @Column({ nullable: true })
-  endTime: Date;
 
   @Column({
     type: 'enum',
@@ -37,77 +28,47 @@ export class Session {
   })
   status: SessionStatus;
 
-  @Column({ type: 'jsonb', nullable: true })
-  gpsTrackingData: {
-    latitude: number;
-    longitude: number;
-    timestamp: Date;
-    accuracy?: number;
-  }[];
-
-  @Column({ type: 'jsonb', nullable: true })
-  activityLog: {
-    timestamp: Date;
-    type: string;
-    description: string;
-    location?: {
-      latitude: number;
-      longitude: number;
-    };
-  }[];
-
-  @Column({ type: 'jsonb', nullable: true })
-  emergencyAlerts: {
-    timestamp: Date;
-    type: string;
-    description: string;
-    resolved: boolean;
-    resolvedAt?: Date;
-  }[];
-
-  @Column({ type: 'jsonb', nullable: true })
-  photos: {
-    id: string;
-    url: string;
-    timestamp: Date;
-    description?: string;
-  }[];
-
-  @Column({ type: 'jsonb', nullable: true })
-  checkIns: {
-    timestamp: Date;
-    type: 'start' | 'break' | 'resume' | 'end';
-    location?: {
-      latitude: number;
-      longitude: number;
-    };
-    notes?: string;
-  }[];
-
-  @Column({ type: 'jsonb', nullable: true })
-  notes: {
-    timestamp: Date;
-    content: string;
-    author: 'parent' | 'sitter';
-  }[];
+  @Column({ type: 'timestamp' })
+  startTime: Date;
 
   @Column({ nullable: true })
-  actualStartTime: Date;
+  endTime: Date;
 
-  @Column({ nullable: true })
-  actualEndTime: Date;
+  @Column({ type: 'int', default: 0 })
+  durationMinutes: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  actualDuration: number;
+  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
+  startLatitude: number;
 
-  @Column({ nullable: true })
-  pausedAt: Date;
+  @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
+  startLongitude: number;
 
-  @Column({ nullable: true })
-  resumedAt: Date;
+  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
+  endLatitude: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  totalPauseTime: number;
+  @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
+  endLongitude: number;
+
+  @Column({ type: 'text', nullable: true })
+  locationHistory: string; // JSON array of location points
+
+  @Column({ type: 'text', nullable: true })
+  activities: string; // JSON array of activities performed
+
+  @Column({ type: 'text', nullable: true })
+  photos: string; // JSON array of photo URLs
+
+  @Column({ type: 'text', nullable: true })
+  notes: string;
+
+  @Column({ type: 'text', nullable: true })
+  emergencyAlerts: string; // JSON array of emergency alerts
+
+  @Column({ type: 'text', nullable: true })
+  checkIns: string; // JSON array of check-in events
+
+  @Column({ type: 'text', nullable: true })
+  metadata: string; // JSON object for additional data
 
   @CreateDateColumn()
   createdAt: Date;
@@ -116,7 +77,36 @@ export class Session {
   updatedAt: Date;
 
   // Relationships
-  @ManyToOne(() => Booking, (booking) => booking.sessions)
+  @ManyToOne(() => Booking, booking => booking.sessions)
   @JoinColumn({ name: 'bookingId' })
   booking: Booking;
+
+  @Column()
+  bookingId: string;
+
+  // Helper methods
+  get isActive(): boolean {
+    return this.status === SessionStatus.ACTIVE;
+  }
+
+  get isCompleted(): boolean {
+    return this.status === SessionStatus.COMPLETED;
+  }
+
+  get duration(): number {
+    if (!this.endTime) return 0;
+    return Math.round((this.endTime.getTime() - this.startTime.getTime()) / (1000 * 60));
+  }
+
+  get hasLocationTracking(): boolean {
+    return !!(this.startLatitude && this.startLongitude);
+  }
+
+  get hasPhotos(): boolean {
+    return !!this.photos;
+  }
+
+  get hasEmergencyAlerts(): boolean {
+    return !!this.emergencyAlerts;
+  }
 } 

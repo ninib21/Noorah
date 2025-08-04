@@ -1,0 +1,280 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: nannyradar-postgres
+    environment:
+      POSTGRES_DB: nannyradar_prod
+      POSTGRES_USER: nannyradar_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nannyradar_user -d nannyradar_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: nannyradar-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: nannyradar-backend
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: nannyradar_user
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: nannyradar_prod
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      SENTRY_DSN: ${SENTRY_DSN}
+      LOG_LEVEL: info
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: nannyradar-nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nannyradar-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nannyradar-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+
+  # Log Aggregation
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: nannyradar-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    container_name: nannyradar-kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+
+  # Filebeat for log collection
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.8.0
+    container_name: nannyradar-filebeat
+    volumes:
+      - ./monitoring/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/log/docker:/var/log/docker:ro
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+
+  # Backup Service
+  backup:
+    image: postgres:15-alpine
+    container_name: nannyradar-backup
+    environment:
+      PGPASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./backup:/backup
+    networks:
+      - nannyradar-network
+    command: |
+      sh -c '
+        while true; do
+          pg_dump -h postgres -U nannyradar_user -d nannyradar_prod > /backup/backup_$$(date +%Y%m%d_%H%M%S).sql
+          sleep 86400
+        done
+      '
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # Rate Limiting & Security
+  rate-limiter:
+    image: redis:7-alpine
+    container_name: nannyradar-rate-limiter
+    command: redis-server --appendonly yes
+    volumes:
+      - rate_limiter_data:/data
+    ports:
+      - "6380:6379"
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+
+  # WebSocket Server for Real-time Features
+  websocket:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.websocket
+    container_name: nannyradar-websocket
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "3002:3002"
+    depends_on:
+      - redis
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+
+  # Background Job Processor
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.worker
+    container_name: nannyradar-worker
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: nannyradar_user
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: nannyradar_prod
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - nannyradar-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nginx_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  rate_limiter_data:
+    driver: local
+
+networks:
+  nannyradar-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

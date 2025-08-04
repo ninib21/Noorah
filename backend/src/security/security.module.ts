@@ -1,29 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { SecurityService } from './security.service';
+import { SecurityController } from './security.controller';
 
 @Module({
-  imports: [
-    ConfigModule,
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000, // 1 minute
-        limit: 100, // 100 requests per minute
-      },
-      {
-        ttl: 3600000, // 1 hour
-        limit: 1000, // 1000 requests per hour
-      },
-    ]),
-  ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-  ],
-  exports: [ThrottlerModule],
+  providers: [SecurityService],
+  controllers: [SecurityController],
+  exports: [SecurityService],
 })
 export class SecurityModule {} 

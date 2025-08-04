@@ -16,7 +16,7 @@ if ! command -v gh &> /dev/null; then
     echo "⚠️  GitHub CLI is not installed. You'll need to create the repository manually."
     echo "📝 Please create a new repository at: https://github.com/new"
     echo "   Repository name: nannyradar"
-    echo "   Description: Smart babysitting platform connecting parents with trusted sitters"
+    echo "   Description: Smart babysitting platform connecting parents with trusted sitters - NannyRadar"
     echo "   Make it Public or Private as needed"
     echo ""
     echo "After creating the repository, run these commands:"
@@ -28,7 +28,7 @@ else
     
     # Create GitHub repository
     gh repo create nannyradar \
-        --description "Smart babysitting platform connecting parents with trusted sitters" \
+        --description "Smart babysitting platform connecting parents with trusted sitters - NannyRadar" \
         --public \
         --source=. \
         --remote=origin \

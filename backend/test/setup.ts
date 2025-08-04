@@ -5,7 +5,7 @@ beforeAll(() => {
   // Set test environment
   process.env.NODE_ENV = 'test';
   process.env.JWT_SECRET = 'test-secret-key';
-  process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/babysitting_test';
+  process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/nannyradar_test';
   process.env.STRIPE_SECRET_KEY = 'sk_test_test';
 });
 

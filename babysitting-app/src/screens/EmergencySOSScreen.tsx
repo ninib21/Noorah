@@ -227,7 +227,7 @@ const EmergencySOSScreen: React.FC = () => {
           </View>
           <View style={styles.infoItem}>
             <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-            <Text style={styles.infoText}>GuardianNest support notified</Text>
+            <Text style={styles.infoText}>NannyRadar support notified</Text>
           </View>
         </View>
       </Animated.View>

@@ -224,7 +224,7 @@ export class BookingRecommenderService {
 
     for (const booking of bookings) {
       if (booking.sitter) {
-        const sitterName = `${booking.sitter.user.firstName} ${booking.sitter.user.lastName}`;
+        const sitterName = `${booking.sitter.firstName} ${booking.sitter.lastName}`;
         sitterCounts.set(sitterName, (sitterCounts.get(sitterName) || 0) + 1);
 
         if (booking.rating) {
@@ -580,5 +580,46 @@ export class BookingRecommenderService {
       this.logger.error('Error recording recommendation feedback:', error);
       throw error;
     }
+  }
+
+  async generateSessionSummary(bookingId: string): Promise<any> {
+    try {
+      const booking = await this.bookingRepository.findOne({
+        where: { id: bookingId },
+        relations: ['sitter', 'parent'],
+      });
+
+      if (!booking) {
+        throw new Error('Booking not found');
+      }
+
+      const sitterName = `${booking.sitter.firstName} ${booking.sitter.lastName}`;
+      const parentName = `${booking.parent.firstName} ${booking.parent.lastName}`;
+
+      // Generate AI summary
+      const summary = await this.generateSummary({
+        sitterName,
+        parentName,
+        duration: booking.duration,
+        activities: booking.activities || [],
+        notes: booking.notes || '',
+        rating: booking.rating || 0,
+      });
+
+      return {
+        bookingId,
+        summary,
+        generatedAt: new Date(),
+      };
+    } catch (error) {
+      this.logger.error('Error generating session summary:', error);
+      throw error;
+    }
+  }
+
+  private async generateSummary(data: any): Promise<string> {
+    // In a real implementation, you'd use AI to generate a summary
+    console.log('Generating summary for:', data);
+    return `Session summary for ${data.sitterName} and ${data.parentName}`;
   }
 } 

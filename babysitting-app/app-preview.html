@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NannyRadar - Smart Babysitting App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #3A7DFF 0%, #FF7DB9 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 375px;
+            height: 812px;
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: #3A7DFF;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .screen {
+            height: calc(100% - 44px);
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Splash Screen */
+        .splash-screen {
+            background: linear-gradient(135deg, #3A7DFF 0%, #FF7DB9 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+
+        .app-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Login Screen */
+        .login-screen {
+            background: linear-gradient(135deg, #3A7DFF 0%, #FF7DB9 100%);
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .login-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .login-form {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            font-size: 14px;
+            color: #64748B;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #F8FAFC;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3A7DFF;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: #3A7DFF;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+
+        .btn-primary:hover {
+            background: #2563EB;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #64748B;
+            font-size: 14px;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-social {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Home Screen */
+        .home-screen {
+            background: #F8FAFC;
+            display: none;
+        }
+
+        .home-header {
+            background: linear-gradient(135deg, #3A7DFF 0%, #FF7DB9 100%);
+            padding: 20px;
+            color: white;
+        }
+
+        .greeting {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .date {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .quick-actions {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .action-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .action-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .action-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1E293B;
+        }
+
+        .bookings-section {
+            padding: 0 20px 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1E293B;
+            margin-bottom: 16px;
+        }
+
+        .booking-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .booking-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .sitter-avatar {
+            width: 40px;
+            height: 40px;
+            background: #E2E8F0;
+            border-radius: 20px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .sitter-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1E293B;
+        }
+
+        .sitter-rating {
+            font-size: 14px;
+            color: #64748B;
+        }
+
+        .booking-details {
+            font-size: 14px;
+            color: #64748B;
+        }
+
+        .navigation {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #E2E8F0;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+        }
+
+        .nav-item {
+            text-align: center;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .nav-item:hover {
+            background: #F1F5F9;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .nav-label {
+            font-size: 12px;
+            color: #64748B;
+        }
+
+        .nav-item.active .nav-label {
+            color: #3A7DFF;
+        }
+
+        /* Screen Navigation */
+        .screen-nav {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            display: block;
+            padding: 8px 16px;
+            margin: 4px 0;
+            background: #3A7DFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .nav-btn:hover {
+            background: #2563EB;
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-nav">
+        <button class="nav-btn" onclick="showScreen('splash')">Splash</button>
+        <button class="nav-btn" onclick="showScreen('login')">Login</button>
+        <button class="nav-btn" onclick="showScreen('home')">Home</button>
+    </div>
+
+    <div class="app-container">
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>NannyRadar</span>
+            <span>100%</span>
+        </div>
+
+        <!-- Splash Screen -->
+        <div class="screen splash-screen" id="splash">
+            <div class="app-icon">🛡️</div>
+            <div class="app-name">NannyRadar</div>
+            <div class="tagline">Safe & Secure Babysitting</div>
+            <div class="loading-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+
+        <!-- Login Screen -->
+        <div class="screen login-screen" id="login">
+            <div class="login-header">
+                <div class="login-title">Welcome Back</div>
+                <div class="login-subtitle">Sign in to your account</div>
+            </div>
+            <div class="login-form">
+                <div class="input-group">
+                    <div class="input-label">Email or Phone</div>
+                    <input type="text" class="input-field" placeholder="Enter your email or phone">
+                </div>
+                <button class="btn-primary">Send OTP</button>
+                <div class="divider">or</div>
+                <div class="social-buttons">
+                    <button class="btn-social">Google</button>
+                    <button class="btn-social">Apple</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Home Screen -->
+        <div class="screen home-screen" id="home">
+            <div class="home-header">
+                <div class="greeting">Good Morning, Parent!</div>
+                <div class="date">Thursday, August 1</div>
+            </div>
+            
+            <div class="quick-actions">
+                <div class="action-card">
+                    <div class="action-icon">📚</div>
+                    <div class="action-title">Book Sitter</div>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">👥</div>
+                    <div class="action-title">My Sitters</div>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">💬</div>
+                    <div class="action-title">Messages</div>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">🚨</div>
+                    <div class="action-title">Emergency</div>
+                </div>
+            </div>
+
+            <div class="bookings-section">
+                <div class="section-title">Today's Bookings</div>
+                <div class="booking-card">
+                    <div class="booking-header">
+                        <div class="sitter-avatar">S</div>
+                        <div class="sitter-info">
+                            <h3>Sarah Johnson</h3>
+                            <div class="sitter-rating">⭐ 4.8 • 2:00 PM - 6:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="booking-details">👶 Emma (5), Liam (3) • 🟢 Confirmed</div>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <div class="nav-item active">
+                    <div class="nav-icon">🏠</div>
+                    <div class="nav-label">Home</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">📚</div>
+                    <div class="nav-label">Book</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">💬</div>
+                    <div class="nav-label">Chat</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">👤</div>
+                    <div class="nav-label">Profile</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(screenName) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.style.display = 'none';
+            });
+            
+            // Show selected screen
+            document.getElementById(screenName).style.display = 'block';
+        }
+
+        // Auto-advance screens for demo
+        let currentScreen = 0;
+        const screens = ['splash', 'login', 'home'];
+        
+        function nextScreen() {
+            currentScreen = (currentScreen + 1) % screens.length;
+            showScreen(screens[currentScreen]);
+        }
+
+        // Auto-advance every 3 seconds
+        setInterval(nextScreen, 3000);
+
+        // Show splash screen initially
+        showScreen('splash');
+    </script>
+</body>
+</html> 

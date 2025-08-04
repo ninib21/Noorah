@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Analytics from 'expo-analytics';
+// import * as Analytics from 'expo-analytics';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
@@ -354,7 +354,7 @@ class FeedbackService {
   private async trackEvent(eventName: string, properties: any): Promise<void> {
     try {
       // Track with Expo Analytics
-      await Analytics.logEvent(eventName, properties);
+      // await Analytics.logEvent(eventName, properties);
 
       // Save locally for offline analysis
       await this.saveAnalyticsEvent(eventName, properties);

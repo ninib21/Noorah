@@ -1,4 +1,4 @@
-# 🛡️ GuardianNest - Babysitting App
+# 🛡️ NannyRadar - Babysitting App
 
 ## Phase 3: Military-Grade Security Integration
 
@@ -293,9 +293,9 @@ console.log('Encryption test:', testData === decrypted);
 ## 📞 Support
 
 For technical support or security questions:
-- **Email**: security@guardiannest.com
+- **Email**: security@nannyradar.com
 - **Emergency**: 911 (for real emergencies)
-- **Documentation**: [docs.guardiannest.com](https://docs.guardiannest.com)
+- **Documentation**: [docs.nannyradar.com](https://docs.nannyradar.com)
 
 ## 📄 License
 

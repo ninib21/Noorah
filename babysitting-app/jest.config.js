@@ -22,7 +22,7 @@ module.exports = {
       statements: 80,
     },
   },
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@components/(.*)$': '<rootDir>/src/components/$1',
     '^@screens/(.*)$': '<rootDir>/src/screens/$1',
@@ -35,7 +35,8 @@ module.exports = {
     '<rootDir>/src/**/__tests__/**/*.{ts,tsx}',
     '<rootDir>/src/**/*.{test,spec}.{ts,tsx}',
   ],
-  transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
-  },
+  modulePathIgnorePatterns: [
+    '<rootDir>/node_modules/@react-native/js-polyfills',
+    '<rootDir>/node_modules/@react-native/polyfills',
+  ],
 }; 

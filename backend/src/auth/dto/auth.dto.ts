@@ -1,48 +1,49 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsOptional, IsEnum, MinLength, IsPhoneNumber } from 'class-validator';
-
-export enum UserType {
-  PARENT = 'parent',
-  SITTER = 'sitter',
-  ADMIN = 'admin',
-}
+import { IsString, IsEmail, IsOptional, IsEnum, MinLength, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserType } from '../../entities/user.entity';
 
 export class RegisterDto {
-  @ApiProperty({ description: 'User email address' })
+  @ApiProperty({ description: 'User email' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({ description: 'User phone number' })
-  @IsPhoneNumber()
-  phone: string;
+  @ApiPropertyOptional({ description: 'User phone number' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
 
-  @ApiProperty({ description: 'User password', minLength: 8 })
+  @ApiProperty({ description: 'User password' })
   @IsString()
   @MinLength(8)
+  @MaxLength(128)
   password: string;
-
-  @ApiProperty({ description: 'User type', enum: UserType })
-  @IsEnum(UserType)
-  userType: UserType;
 
   @ApiProperty({ description: 'User first name' })
   @IsString()
+  @MinLength(2)
+  @MaxLength(50)
   firstName: string;
 
   @ApiProperty({ description: 'User last name' })
   @IsString()
+  @MinLength(2)
+  @MaxLength(50)
   lastName: string;
+
+  @ApiProperty({ description: 'User type', enum: UserType })
+  @IsEnum(UserType)
+  userType: UserType;
 }
 
 export class LoginDto {
-  @ApiProperty({ description: 'User email address (optional if phone provided)' })
+  @ApiPropertyOptional({ description: 'User email' })
   @IsOptional()
   @IsEmail()
   email?: string;
 
-  @ApiProperty({ description: 'User phone number (optional if email provided)' })
+  @ApiPropertyOptional({ description: 'User phone number' })
   @IsOptional()
-  @IsPhoneNumber()
+  @IsString()
   phone?: string;
 
   @ApiProperty({ description: 'User password' })
@@ -51,41 +52,32 @@ export class LoginDto {
 }
 
 export class VerifyOtpDto {
-  @ApiProperty({ description: 'User email address (optional if phone provided)' })
-  @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @ApiProperty({ description: 'User phone number (optional if email provided)' })
-  @IsOptional()
-  @IsPhoneNumber()
-  phone?: string;
-
-  @ApiProperty({ description: 'OTP code (6 digits)' })
+  @ApiProperty({ description: 'OTP ID' })
   @IsString()
+  otpId: string;
+
+  @ApiProperty({ description: 'OTP code' })
+  @IsString()
+  @MinLength(6)
+  @MaxLength(6)
   otp: string;
 }
 
 export class ForgotPasswordDto {
-  @ApiProperty({ description: 'User email address (optional if phone provided)' })
-  @IsOptional()
+  @ApiProperty({ description: 'User email' })
   @IsEmail()
-  email?: string;
-
-  @ApiProperty({ description: 'User phone number (optional if email provided)' })
-  @IsOptional()
-  @IsPhoneNumber()
-  phone?: string;
+  email: string;
 }
 
 export class ResetPasswordDto {
-  @ApiProperty({ description: 'Reset token received via email/SMS' })
+  @ApiProperty({ description: 'Reset token' })
   @IsString()
   token: string;
 
-  @ApiProperty({ description: 'New password', minLength: 8 })
+  @ApiProperty({ description: 'New password' })
   @IsString()
   @MinLength(8)
+  @MaxLength(128)
   newPassword: string;
 }
 
@@ -95,27 +87,11 @@ export class RefreshTokenDto {
   refreshToken: string;
 }
 
-export class ChangePasswordDto {
-  @ApiProperty({ description: 'Current password' })
-  @IsString()
-  currentPassword: string;
-
-  @ApiProperty({ description: 'New password', minLength: 8 })
-  @IsString()
-  @MinLength(8)
-  newPassword: string;
-}
-
-export class ToggleMFADto {
-  @ApiProperty({ description: 'Enable or disable MFA' })
-  enable: boolean;
-}
-
 export class AuthResponseDto {
-  @ApiProperty({ description: 'JWT access token' })
+  @ApiProperty({ description: 'Access token' })
   accessToken: string;
 
-  @ApiProperty({ description: 'JWT refresh token' })
+  @ApiProperty({ description: 'Refresh token' })
   refreshToken: string;
 
   @ApiProperty({ description: 'User information' })
@@ -126,8 +102,8 @@ export class AuthResponseDto {
     userType: UserType;
     firstName: string;
     lastName: string;
-    isEmailVerified: boolean;
-    isPhoneVerified: boolean;
+    emailVerified: boolean;
+    phoneVerified: boolean;
     mfaEnabled: boolean;
     lastLoginAt: Date;
   };

@@ -8,7 +8,7 @@ describe('Login Flow', () => {
   });
 
   it('should show login screen on app launch', async () => {
-    await expect(element(by.text('Welcome to GuardianNest'))).toBeVisible();
+    await expect(element(by.text('Welcome to NannyRadar'))).toBeVisible();
     await expect(element(by.text('Sign In'))).toBeVisible();
   });
 

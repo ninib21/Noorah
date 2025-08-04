@@ -3,72 +3,101 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Booking } from './booking.entity';
 
+export enum ReviewType {
+  PARENT_TO_SITTER = 'parent_to_sitter',
+  SITTER_TO_PARENT = 'sitter_to_parent',
+  SITTER_TO_SITTER = 'sitter_to_sitter',
+}
+
 @Entity('reviews')
 export class Review {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  bookingId: string;
+  @Column({
+    type: 'enum',
+    enum: ReviewType,
+    default: ReviewType.PARENT_TO_SITTER,
+  })
+  type: ReviewType;
 
-  @Column()
-  reviewerId: string;
-
-  @Column()
-  revieweeId: string;
-
-  @Column({ type: 'int', check: 'rating >= 1 AND rating <= 5' })
-  rating: number;
+  @Column({ type: 'int' })
+  rating: number; // 1-5 stars
 
   @Column({ type: 'text', nullable: true })
   comment: string;
 
-  @Column({ default: true })
-  isPublic: boolean;
+  @Column({ type: 'text', nullable: true })
+  tags: string; // JSON array of tags like "punctual", "playful", "reliable"
 
-  @Column({ type: 'jsonb', nullable: true })
-  categories: {
-    punctuality?: number;
-    communication?: number;
-    safety?: number;
-    cleanliness?: number;
-    fun?: number;
-  };
+  @Column({ type: 'boolean', default: false })
+  isAnonymous: boolean;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   isVerified: boolean;
 
-  @Column({ nullable: true })
-  verifiedAt: Date;
-
-  @Column({ default: false })
-  isReported: boolean;
+  @Column({ type: 'text', nullable: true })
+  response: string; // Response from the reviewed person
 
   @Column({ nullable: true })
-  reportedAt: Date;
+  respondedAt: Date;
 
-  @Column({ nullable: true })
-  reportReason: string;
+  @Column({ type: 'text', nullable: true })
+  metadata: string; // JSON object for additional data
 
   @CreateDateColumn()
   createdAt: Date;
 
-  // Relationships
-  @ManyToOne(() => Booking)
-  @JoinColumn({ name: 'bookingId' })
-  booking: Booking;
+  @UpdateDateColumn()
+  updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.reviewsGiven)
+  // Relationships
+  @ManyToOne(() => User, user => user.reviewsGiven)
   @JoinColumn({ name: 'reviewerId' })
   reviewer: User;
 
-  @ManyToOne(() => User, (user) => user.reviewsReceived)
+  @Column()
+  reviewerId: string;
+
+  @ManyToOne(() => User, user => user.reviewsReceived)
   @JoinColumn({ name: 'revieweeId' })
   reviewee: User;
+
+  @Column()
+  revieweeId: string;
+
+  @ManyToOne(() => Booking, booking => booking.reviews)
+  @JoinColumn({ name: 'bookingId' })
+  booking: Booking;
+
+  @Column({ nullable: true })
+  bookingId: string;
+
+  // Helper methods
+  get isPositive(): boolean {
+    return this.rating >= 4;
+  }
+
+  get isNegative(): boolean {
+    return this.rating <= 2;
+  }
+
+  get isNeutral(): boolean {
+    return this.rating === 3;
+  }
+
+  get hasResponse(): boolean {
+    return !!this.response;
+  }
+
+  get isVerifiedReview(): boolean {
+    return this.isVerified;
+  }
 } 

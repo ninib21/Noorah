@@ -1,36 +1,33 @@
-# 🏠 NannyRadar - Smart Babysitting App
+# 🏠 NannyRadar - Smart Babysitting Platform
 
 A comprehensive, AI-powered babysitting platform that connects parents with trusted sitters, featuring advanced security, real-time monitoring, and intelligent matching.
 
-## 🌟 Features
+## 🚀 Features
 
-### 🔐 Security & Safety
-- **Real-time GPS tracking** with geofencing
-- **Emergency SOS** with instant alerts
-- **Biometric authentication** (Face ID, Touch ID)
-- **End-to-end encryption** for all communications
-- **Session monitoring** with AI-powered safety checks
+### 🔐 Military-Grade Security
+- **End-to-End Encryption**: AES-256-GCM encryption for all sensitive data
+- **Biometric Authentication**: Fingerprint and Face ID support
+- **Multi-Factor Authentication**: TOTP-based 2FA with backup codes
+- **Real-Time GPS Tracking**: High-accuracy location monitoring with geofencing
+- **Emergency SOS System**: One-tap emergency alerts with automatic escalation
 
-### 🤖 AI-Powered Features
-- **Smart sitter matching** based on preferences and compatibility
-- **AI booking recommendations** for optimal scheduling
-- **Voice assistant** for hands-free operation
-- **Session summaries** with AI-generated insights
-- **Predictive analytics** for demand forecasting
+### 🤖 AI-Powered Matching
+- **Smart Sitter Matching**: Location and rating-based recommendations
+- **Booking Recommendations**: AI-driven booking suggestions
+- **Voice Assistant**: Hands-free app interaction
+- **Translation Services**: Multi-language support
 
-### 💳 Payment & Financial
-- **Stripe integration** for secure payments
-- **Automated payouts** for sitters
-- **Tip suggestions** and automatic rebooking
-- **Financial tracking** and reporting
-- **Multi-currency support**
+### 💳 Secure Payments
+- **Stripe Connect Integration**: Secure marketplace payments
+- **Automatic Payouts**: Direct deposits to sitter accounts
+- **Payment Protection**: Escrow and dispute resolution
+- **Tipping System**: In-app tipping with rebooking incentives
 
-### 📱 User Experience
-- **Intuitive mobile app** (iOS & Android)
-- **Real-time messaging** with media sharing
-- **Calendar integration** and scheduling
-- **Review and rating system**
-- **Multi-language support**
+### 📱 Modern Mobile App
+- **React Native**: Cross-platform iOS and Android support
+- **Expo Framework**: Rapid development and deployment
+- **Real-Time Updates**: Live notifications and status updates
+- **Offline Support**: Core functionality without internet
 
 ## 🏗️ Architecture
 
@@ -38,50 +35,34 @@ A comprehensive, AI-powered babysitting platform that connects parents with trus
 nannyradar/
 ├── 📱 babysitting-app/          # React Native Frontend
 │   ├── src/
-│   │   ├── components/          # Reusable UI components
-│   │   ├── screens/             # App screens
-│   │   ├── services/            # API services
-│   │   ├── store/               # Redux store
-│   │   ├── navigation/          # Navigation setup
-│   │   └── utils/               # Utility functions
-│   ├── assets/                  # Images, fonts, etc.
-│   └── e2e/                     # End-to-end tests
-├── 🔧 backend/                  # NestJS Backend
+│   │   ├── screens/             # UI Screens
+│   │   ├── components/          # Reusable Components
+│   │   ├── services/            # API Services
+│   │   ├── store/               # Redux State Management
+│   │   └── navigation/          # App Navigation
+│   └── assets/                  # Images, Icons, Fonts
+├── 🔧 backend/                  # NestJS Backend API
 │   ├── src/
-│   │   ├── auth/                # Authentication
-│   │   ├── payments/            # Payment processing
-│   │   ├── bookings/            # Booking management
-│   │   ├── ai/                  # AI services
-│   │   └── entities/            # Database models
-│   └── test/                    # Backend tests
-├── 🧪 Testing Suite
-│   ├── Unit Tests               # Jest + React Native Testing Library
-│   ├── E2E Tests                # Detox
-│   ├── Load Tests               # k6
-│   └── Security Tests           # OWASP ZAP + Snyk
-└── 📚 Documentation
-    ├── API Documentation        # Swagger/OpenAPI
-    ├── Security Guidelines      # Security best practices
-    └── Deployment Guide         # CI/CD setup
+│   │   ├── auth/                # Authentication & Authorization
+│   │   ├── bookings/            # Booking Management
+│   │   ├── payments/            # Payment Processing
+│   │   ├── sitters/             # Sitter Management
+│   │   ├── users/               # User Management
+│   │   ├── security/            # Security Features
+│   │   └── monitoring/          # Health & Metrics
+│   └── test/                    # Backend Tests
+├── 🐳 infrastructure/           # Docker & Deployment
+├── 📚 docs/                     # Documentation
+└── 🧪 test/                     # E2E Tests
 ```
 
-## 🚀 Quick Start
+## 🛠️ Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- PostgreSQL 15+
+- Node.js 18+
 - Expo CLI
-- Android Studio / Xcode (for mobile development)
-
-### Backend Setup
-```bash
-cd backend
-npm install
-cp .env.example .env
-# Configure your environment variables
-npm run start:dev
-```
+- PostgreSQL 14+
+- Redis (optional)
 
 ### Frontend Setup
 ```bash
@@ -90,200 +71,119 @@ npm install
 npx expo start
 ```
 
+### Backend Setup
+```bash
+cd backend
+npm install
+npm run start:dev
+```
+
 ### Database Setup
 ```bash
 # Create database
-createdb nannyradar_dev
-createdb nannyradar_test
+createdb nannyradar
 
 # Run migrations
 cd backend
 npm run migration:run
+
+# Seed data (optional)
+npm run seed
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+Create `.env` files in both `babysitting-app/` and `backend/` directories:
+
+**Frontend (.env)**
+```env
+EXPO_PUBLIC_API_URL=http://localhost:3001
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_key
+EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_key
+```
+
+**Backend (.env)**
+```env
+DATABASE_URL=postgresql://user:pass@localhost:5432/nannyradar
+JWT_SECRET=your_jwt_secret
+STRIPE_SECRET_KEY=your_stripe_key
 ```
 
 ## 🧪 Testing
 
-### Run All Tests
+### Frontend Tests
 ```bash
-# Backend tests
-cd backend
-npm run test:all
-
-# Frontend tests
 cd babysitting-app
-npm run test:all
+npm run test
+npm run test:e2e
+```
 
-# Load testing
+### Backend Tests
+```bash
 cd backend
-npm run test:load
+npm run test
+npm run test:e2e
+```
 
-# Security testing
+### Security Tests
+```bash
 npm run test:security
-```
-
-### Test Coverage
-- **Backend**: 80%+ coverage target
-- **Frontend**: 80%+ coverage target
-- **E2E**: Critical user flows
-- **Security**: OWASP compliance
-
-## 🔒 Security Features
-
-### Authentication & Authorization
-- JWT-based authentication
-- Role-based access control (RBAC)
-- Multi-factor authentication (MFA)
-- Session management
-
-### Data Protection
-- End-to-end encryption
-- Secure API communication (HTTPS)
-- Input validation and sanitization
-- SQL injection prevention
-
-### Privacy Compliance
-- GDPR compliance
-- COPPA compliance (child protection)
-- Data retention policies
-- Privacy by design
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **React Native** with Expo
-- **TypeScript** for type safety
-- **Redux Toolkit** for state management
-- **React Navigation** for routing
-- **NativeWind** for styling
-
-### Backend
-- **NestJS** framework
-- **TypeScript** for type safety
-- **PostgreSQL** database
-- **TypeORM** for database management
-- **JWT** for authentication
-
-### AI & ML
-- **OpenAI GPT** for natural language processing
-- **TensorFlow.js** for client-side ML
-- **Custom recommendation algorithms**
-
-### Infrastructure
-- **Docker** for containerization
-- **GitHub Actions** for CI/CD
-- **AWS/Google Cloud** for hosting
-- **Stripe** for payments
-
-## 📊 API Documentation
-
-### Authentication Endpoints
-```
-POST /auth/login          # User login
-POST /auth/register       # User registration
-POST /auth/refresh        # Refresh token
-POST /auth/logout         # User logout
-```
-
-### Booking Endpoints
-```
-GET    /bookings          # Get user bookings
-POST   /bookings          # Create new booking
-PUT    /bookings/:id      # Update booking
-DELETE /bookings/:id      # Cancel booking
-```
-
-### Payment Endpoints
-```
-POST /payments/create-intent    # Create payment intent
-POST /payments/process          # Process payment
-GET  /payments                  # Get payment history
-POST /payments/refund           # Refund payment
-```
-
-### AI Endpoints
-```
-POST /ai/match-sitter          # AI sitter matching
-POST /ai/booking-recommend     # Booking recommendations
-POST /ai/session-summary       # Generate session summary
+npm run test:owasp
+npm run test:snyk
 ```
 
 ## 🚀 Deployment
 
-### Production Deployment
+### Frontend (Expo)
 ```bash
-# Build backend
-cd backend
-npm run build
-npm run start:prod
-
-# Build frontend
 cd babysitting-app
-npx expo build:android
 npx expo build:ios
+npx expo build:android
 ```
 
-### Environment Variables
+### Backend (Docker)
 ```bash
-# Backend (.env)
-DATABASE_URL=postgresql://user:pass@localhost:5432/nannyradar
-JWT_SECRET=your-jwt-secret
-STRIPE_SECRET_KEY=sk_live_...
-OPENAI_API_KEY=sk-...
-
-# Frontend (app.config.js)
-EXPO_PUBLIC_API_URL=https://api.nannyradar.com
-EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+cd backend
+docker build -t nannyradar-backend .
+docker run -p 3001:3001 nannyradar-backend
 ```
+
+## 📊 Monitoring
+
+- **Health Checks**: `/api/v1/health`
+- **API Documentation**: `/api/docs`
+- **Metrics**: Prometheus endpoints
+- **Logs**: Structured JSON logging
+
+## 🔒 Security
+
+- **Encryption**: AES-256-GCM for data at rest
+- **Transport**: TLS 1.3 for all communications
+- **Authentication**: JWT with refresh tokens
+- **Authorization**: Role-based access control
+- **Audit Logging**: Complete activity tracking
 
 ## 🤝 Contributing
 
-### Development Workflow
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-### Code Standards
-- **TypeScript** for type safety
-- **ESLint** + **Prettier** for code formatting
-- **Conventional Commits** for commit messages
-- **80%+ test coverage** requirement
-- **Security review** for all changes
-
-### Testing Requirements
-- Unit tests for all new features
-- Integration tests for API endpoints
-- E2E tests for critical user flows
-- Security tests for vulnerability scanning
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## 📞 Support
 
-### Documentation
-- [API Documentation](docs/api.md)
-- [Security Guidelines](docs/security.md)
-- [Deployment Guide](docs/deployment.md)
-- [Testing Guide](TESTING_SUITE_README.md)
-
-### Contact
 - **Email**: support@nannyradar.com
-- **Website**: [nannyradar.com](https://nannyradar.com)
+- **Documentation**: [docs.nannyradar.com](https://docs.nannyradar.com)
 - **GitHub Issues**: [Report a bug](https://github.com/nannyradar/babysitting-app/issues)
-
-## 🙏 Acknowledgments
-
-- **OpenAI** for AI capabilities
-- **Stripe** for payment processing
-- **Expo** for React Native development
-- **NestJS** for backend framework
-- **OWASP** for security guidelines
 
 ---
 
-**Made with ❤️ by BidayaX and Divitiae Good Doers Inc. - NPO: 2023-001341848**
+**🔒 Security Notice**: This application handles sensitive personal data and implements military-grade security measures. Always test security features in controlled environments before deployment.
 
-*Building the future of safe, smart childcare* 
+**⚠️ Emergency Features**: The emergency SOS system is designed for real emergency situations. Misuse may result in legal consequences. 

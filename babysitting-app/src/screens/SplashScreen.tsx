@@ -76,10 +76,10 @@ const SplashScreen: React.FC = () => {
           </View>
 
           {/* App Name */}
-          <Text style={styles.appName}>GuardianNest</Text>
+          <Text style={styles.appName}>NannyRadar</Text>
           
           {/* Tagline */}
-          <Text style={styles.tagline}>Safe & Secure Babysitting</Text>
+          <Text style={styles.tagline}>Find Trusted Babysitters</Text>
 
           {/* Loading Indicator */}
           <View style={styles.loadingContainer}>
@@ -100,7 +100,7 @@ const SplashScreen: React.FC = () => {
           ]}
         >
           <Text style={styles.versionText}>Version 1.0.0</Text>
-          <Text style={styles.copyrightText}>© 2024 GuardianNest</Text>
+          <Text style={styles.copyrightText}>© 2024 NannyRadar</Text>
         </Animated.View>
       </LinearGradient>
     </SafeAreaView>

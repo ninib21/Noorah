@@ -7,20 +7,23 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Booking } from './booking.entity';
+import { User } from './user.entity';
 
 export enum PaymentStatus {
   PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
+  AUTHORIZED = 'authorized',
+  PAID = 'paid',
   FAILED = 'failed',
   REFUNDED = 'refunded',
+  DISPUTED = 'disputed',
 }
 
-export enum PaymentMethod {
-  CARD = 'card',
-  BANK_TRANSFER = 'bank_transfer',
-  WALLET = 'wallet',
+export enum PaymentType {
+  BOOKING = 'booking',
+  SUBSCRIPTION = 'subscription',
+  TIP = 'tip',
+  REFUND = 'refund',
+  WITHDRAWAL = 'withdrawal',
 }
 
 @Entity('payments')
@@ -28,20 +31,12 @@ export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  bookingId: string;
-
-  @Column({ unique: true, nullable: true })
-  stripePaymentIntentId: string;
-
-  @Column({ nullable: true })
-  stripeTransferId: string;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  amount: number;
-
-  @Column({ length: 3, default: 'USD' })
-  currency: string;
+  @Column({
+    type: 'enum',
+    enum: PaymentType,
+    default: PaymentType.BOOKING,
+  })
+  type: PaymentType;
 
   @Column({
     type: 'enum',
@@ -50,38 +45,38 @@ export class Payment {
   })
   status: PaymentStatus;
 
-  @Column({
-    type: 'enum',
-    enum: PaymentMethod,
-    default: PaymentMethod.CARD,
-  })
-  paymentMethod: PaymentMethod;
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  amount: number;
 
-  @Column({ type: 'jsonb', nullable: true })
-  paymentDetails: {
-    last4?: string;
-    brand?: string;
-    expMonth?: number;
-    expYear?: number;
-  };
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  fee: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  totalAmount: number;
+
+  @Column({ nullable: true })
+  stripePaymentIntentId: string;
+
+  @Column({ nullable: true })
+  stripeTransferId: string;
+
+  @Column({ nullable: true })
+  stripeRefundId: string;
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
+  @Column({ type: 'text', nullable: true })
+  metadata: string; // JSON object for additional data
 
   @Column({ nullable: true })
   processedAt: Date;
 
   @Column({ nullable: true })
-  failedAt: Date;
-
-  @Column({ nullable: true })
-  failureReason: string;
-
-  @Column({ nullable: true })
   refundedAt: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   refundReason: string;
-
-  @Column({ type: 'jsonb', nullable: true })
-  metadata: any;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -90,7 +85,30 @@ export class Payment {
   updatedAt: Date;
 
   // Relationships
-  @ManyToOne(() => Booking, (booking) => booking.payments)
-  @JoinColumn({ name: 'bookingId' })
-  booking: Booking;
+  @ManyToOne(() => User, user => user.payments)
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @Column()
+  userId: string;
+
+  @Column({ nullable: true })
+  bookingId: string;
+
+  // Helper methods
+  get isSuccessful(): boolean {
+    return this.status === PaymentStatus.PAID;
+  }
+
+  get isRefunded(): boolean {
+    return this.status === PaymentStatus.REFUNDED;
+  }
+
+  get isFailed(): boolean {
+    return this.status === PaymentStatus.FAILED;
+  }
+
+  get netAmount(): number {
+    return this.amount - this.fee;
+  }
 } 

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "babysitting-app",
-    "slug": "babysitting-app",
+    "name": "NannyRadar",
+    "slug": "nannyradar",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

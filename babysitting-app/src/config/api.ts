@@ -1,7 +1,9 @@
 // API Configuration
-export const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:3001' 
-  : 'https://api.guardiannest.com'; // Production URL
+export const API_CONFIG = {
+  baseURL: __DEV__
+    ? 'http://localhost:3001' // Development URL
+    : 'https://api.nannyradar.com'; // Production URL
+};
 
 // API Endpoints
 export const API_ENDPOINTS = {

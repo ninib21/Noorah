@@ -113,47 +113,38 @@ export class AIService {
   /**
    * Find best sitter matches using AI
    */
-  async findSitterMatches(request: AISitterMatchRequest): Promise<AISitterMatchResponse[]> {
-    try {
-      this.logger.log(`Finding sitter matches for child ${request.childId}`);
+  async findSitterMatches(request: any): Promise<any[]> {
+    const matches = await this.sitterMatchService.findMatches(
+      request.parentPreferences,
+      request.limit || 10
+    );
 
-      // Get matches from AI service
-      const matches = await this.sitterMatchService.findBestMatches(
-        request.childId,
-        request.parentPreferences,
-        request.limit || 10
-      );
-
-      // Enhance with sitter information
-      const enhancedMatches: AISitterMatchResponse[] = [];
-      
-      for (const match of matches) {
-        const sitter = await this.sitterProfileRepository.findOne({
-          where: { id: match.sitterId },
-          relations: ['user'],
+    // Enrich matches with additional data
+    const enrichedMatches = await Promise.all(
+      matches.map(async (match) => {
+        const sitter = await this.userRepository.findOne({
+          where: { id: match.sitter.id },
+          relations: ['sitterProfile'],
         });
 
-        if (sitter) {
-          enhancedMatches.push({
-            ...match,
-            sitterInfo: {
-              name: sitter.user.firstName + ' ' + sitter.user.lastName,
-              rating: sitter.rating,
-              hourlyRate: sitter.hourlyRate,
-              experience: sitter.experience,
-              verified: sitter.verified,
-              backgroundCheck: sitter.backgroundCheck,
-            },
-          });
-        }
-      }
+        if (!sitter || !sitter.sitterProfile) return null;
 
-      this.logger.log(`Found ${enhancedMatches.length} sitter matches`);
-      return enhancedMatches;
-    } catch (error) {
-      this.logger.error('Error finding sitter matches:', error);
-      throw error;
-    }
+        return {
+          sitterId: sitter.id,
+          name: `${sitter.firstName} ${sitter.lastName}`,
+          rating: sitter.averageRating || 0,
+          hourlyRate: sitter.sitterProfile.hourlyRate || 0,
+          experience: sitter.experience || 0,
+          verified: sitter.emailVerified && sitter.phoneVerified,
+          backgroundCheck: !!sitter.sitterProfile.backgroundCheck,
+          location: sitter.sitterProfile.location || '',
+          bio: sitter.sitterProfile.bio || '',
+          matchScore: match.score,
+        };
+      })
+    );
+
+    return enrichedMatches.filter(match => match !== null);
   }
 
   /**
@@ -204,35 +195,25 @@ export class AIService {
   /**
    * Record match outcome for AI learning
    */
-  async recordMatchOutcome(
-    sitterId: string,
-    childId: string,
-    success: boolean,
-    rating?: number
-  ): Promise<void> {
+  async recordMatchOutcome(sitterId: string, childId: string, success: boolean, rating?: number): Promise<void> {
     try {
-      this.logger.log(`Recording match outcome: sitter ${sitterId}, child ${childId}, success: ${success}`);
-
+      // Record the match outcome for AI learning
       await this.sitterMatchService.recordMatchOutcome(sitterId, childId, success, rating);
-
-      // Store in database for analytics
+      
+      // Update booking with match result
       const booking = await this.bookingRepository.findOne({
-        where: { sitterId, childId },
-        order: { createdAt: 'DESC' },
+        where: { sitterId },
       });
 
       if (booking) {
-        booking.aiMatchScore = success ? 1 : 0;
+        booking.aiMatchScore = success ? 1.0 : 0.0;
         if (rating) {
           booking.aiRating = rating;
         }
         await this.bookingRepository.save(booking);
       }
-
-      this.logger.log('Match outcome recorded successfully');
     } catch (error) {
       this.logger.error('Error recording match outcome:', error);
-      throw error;
     }
   }
 
@@ -364,7 +345,7 @@ export class AIService {
 
     for (const booking of bookings) {
       if (booking.sitter) {
-        const sitterName = `${booking.sitter.user.firstName} ${booking.sitter.user.lastName}`;
+        const sitterName = `${booking.sitter.firstName} ${booking.sitter.lastName}`;
         preferences.preferredSitters.set(sitterName, (preferences.preferredSitters.get(sitterName) || 0) + 1);
 
         totalRate += booking.sitter.hourlyRate;
@@ -436,5 +417,46 @@ export class AIService {
         },
       ],
     };
+  }
+
+  async generateSessionSummary(bookingId: string): Promise<any> {
+    try {
+      const booking = await this.bookingRepository.findOne({
+        where: { id: bookingId },
+        relations: ['sitter', 'parent'],
+      });
+
+      if (!booking) {
+        throw new Error('Booking not found');
+      }
+
+      const sitterName = `${booking.sitter.firstName} ${booking.sitter.lastName}`;
+      const parentName = `${booking.parent.firstName} ${booking.parent.lastName}`;
+
+      // Generate AI summary
+      const summary = await this.generateSummary({
+        sitterName,
+        parentName,
+        duration: booking.duration,
+        activities: booking.activities || [],
+        notes: booking.notes || '',
+        rating: booking.rating || 0,
+      });
+
+      return {
+        bookingId,
+        summary,
+        generatedAt: new Date(),
+      };
+    } catch (error) {
+      this.logger.error('Error generating session summary:', error);
+      throw error;
+    }
+  }
+
+  private async generateSummary(data: any): Promise<string> {
+    // In a real implementation, you'd use AI to generate a summary
+    console.log('Generating summary for:', data);
+    return `Session summary for ${data.sitterName} and ${data.parentName}`;
   }
 } 
