@@ -3,6 +3,8 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
+// import rateLimit from 'express-rate-limit';
+// import slowDown from 'express-slow-down';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -10,8 +12,33 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // Security middleware
-  app.use(helmet());
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    }
+  }));
+
   app.use(compression());
+
+  // Rate limiting configuration (implemented in SecurityGuard)
+  // Note: Rate limiting is now handled by SecurityGuard and SecurityMiddleware
+  // for better integration with NestJS architecture
 
   // Enable CORS with proper configuration
   app.enableCors({

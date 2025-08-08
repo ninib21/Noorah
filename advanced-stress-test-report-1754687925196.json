@@ -1,0 +1,174 @@
+{
+  "timestamp": "2025-08-08T21:18:45.196Z",
+  "testDuration": "106.37",
+  "results": {
+    "endpointTests": [
+      {
+        "name": "Health Check",
+        "path": "/health",
+        "method": "GET",
+        "success": true,
+        "statusCode": 200,
+        "responseTime": 50.5297,
+        "timestamp": "2025-08-08T21:16:58.878Z"
+      },
+      {
+        "name": "Readiness Check",
+        "path": "/health/ready",
+        "method": "GET",
+        "success": true,
+        "statusCode": 200,
+        "responseTime": 16.6353,
+        "timestamp": "2025-08-08T21:16:58.998Z"
+      },
+      {
+        "name": "Login",
+        "path": "/auth/login",
+        "method": "POST",
+        "success": true,
+        "statusCode": 200,
+        "responseTime": 49.29520000000002,
+        "timestamp": "2025-08-08T21:16:59.162Z"
+      },
+      {
+        "name": "Get Bookings",
+        "path": "/bookings",
+        "method": "GET",
+        "success": true,
+        "statusCode": 200,
+        "responseTime": 30.96879999999993,
+        "timestamp": "2025-08-08T21:16:59.301Z"
+      },
+      {
+        "name": "Search Sitters",
+        "path": "/sitters/search",
+        "method": "GET",
+        "success": true,
+        "statusCode": 200,
+        "responseTime": 47.30010000000004,
+        "timestamp": "2025-08-08T21:16:59.456Z"
+      },
+      {
+        "name": "Get Profile",
+        "path": "/users/profile",
+        "method": "GET",
+        "success": true,
+        "statusCode": 200,
+        "responseTime": 47.40750000000003,
+        "timestamp": "2025-08-08T21:16:59.612Z"
+      },
+      {
+        "name": "Create Payment",
+        "path": "/payments/create-intent",
+        "method": "POST",
+        "success": true,
+        "statusCode": 201,
+        "responseTime": 31.067099999999982,
+        "timestamp": "2025-08-08T21:16:59.751Z"
+      }
+    ],
+    "loadTests": [
+      {
+        "name": "Light Load",
+        "config": {
+          "name": "Light Load",
+          "users": 5,
+          "requests": 10,
+          "duration": 10
+        },
+        "results": {
+          "totalRequests": 50,
+          "successful": 50,
+          "failed": 0,
+          "duration": 2.5788652,
+          "avgResponseTime": 31.77633000000004,
+          "requestsPerSecond": 19.38837283934034,
+          "successRate": 100
+        },
+        "timestamp": "2025-08-08T21:17:02.437Z"
+      },
+      {
+        "name": "Medium Load",
+        "config": {
+          "name": "Medium Load",
+          "users": 20,
+          "requests": 15,
+          "duration": 15
+        },
+        "results": {
+          "totalRequests": 300,
+          "successful": 300,
+          "failed": 0,
+          "duration": 15.9067824,
+          "avgResponseTime": 36.6486653333333,
+          "requestsPerSecond": 18.859879544212536,
+          "successRate": 100
+        },
+        "timestamp": "2025-08-08T21:17:20.353Z"
+      },
+      {
+        "name": "Heavy Load",
+        "config": {
+          "name": "Heavy Load",
+          "users": 50,
+          "requests": 20,
+          "duration": 20
+        },
+        "results": {
+          "totalRequests": 1000,
+          "successful": 1000,
+          "failed": 0,
+          "duration": 55.6094284,
+          "avgResponseTime": 37.37004030000006,
+          "requestsPerSecond": 17.982562108119062,
+          "successRate": 100
+        },
+        "timestamp": "2025-08-08T21:18:17.967Z"
+      },
+      {
+        "name": "Spike Test",
+        "config": {
+          "name": "Spike Test",
+          "users": 100,
+          "requests": 5,
+          "duration": 5
+        },
+        "results": {
+          "totalRequests": 500,
+          "successful": 500,
+          "failed": 0,
+          "duration": 23.2044023,
+          "avgResponseTime": 37.053033199999916,
+          "requestsPerSecond": 21.547635381239704,
+          "successRate": 100
+        },
+        "timestamp": "2025-08-08T21:18:43.182Z"
+      }
+    ],
+    "performanceMetrics": {
+      "totalRequests": 1857,
+      "successfulRequests": 1857,
+      "failedRequests": 0,
+      "avgResponseTime": 37.023789283791,
+      "minResponseTime": 10.944799999997485,
+      "maxResponseTime": 161.94840000000113,
+      "p95ResponseTime": 62.7470000000003,
+      "p99ResponseTime": 76.34550000000309,
+      "requestsPerSecond": 0,
+      "errorRate": 0
+    },
+    "recommendations": [
+      "🎉 Excellent performance! System is handling load very well.",
+      "⚡ Low throughput under heavy load. Consider scaling horizontally."
+    ]
+  },
+  "summary": {
+    "totalTests": 1857,
+    "overallSuccessRate": "100.0",
+    "avgResponseTime": "37.02",
+    "recommendations": [
+      "🎉 Excellent performance! System is handling load very well.",
+      "⚡ Low throughput under heavy load. Consider scaling horizontally."
+    ]
+  }
+}

@@ -20,12 +20,15 @@ import {
   ResetPasswordDto,
   AuthResponseDto,
 } from './dto/auth.dto';
+import { SecureLoginDto, SecureRegisterDto } from '../security/validation.dto';
+import { Public } from '../security/security.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
@@ -34,6 +37,7 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user' })

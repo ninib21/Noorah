@@ -1,0 +1,118 @@
+{
+  "timestamp": "2025-08-08T22:12:19.353Z",
+  "testDuration": "381.43",
+  "performanceScore": 0,
+  "totalRequests": 640751,
+  "successfulRequests": 0,
+  "failedRequests": 14255,
+  "blockedRequests": 626496,
+  "stressTestResults": [
+    {
+      "level": "LIGHT",
+      "config": {
+        "users": 100,
+        "requestsPerUser": 10,
+        "duration": 30
+      },
+      "actualDuration": 0.9091767,
+      "totalUsers": 100,
+      "successfulUsers": 100,
+      "failedUsers": 0,
+      "totalRequests": 1000,
+      "successfulRequests": 0,
+      "failedRequests": 0,
+      "blockedRequests": 1000,
+      "requestsPerSecond": 1099.8962027953423,
+      "avgResponseTime": 5.695602900000007,
+      "successRate": 0,
+      "blockRate": 100
+    },
+    {
+      "level": "MEDIUM",
+      "config": {
+        "users": 500,
+        "requestsPerUser": 20,
+        "duration": 60
+      },
+      "actualDuration": 2.858314400000001,
+      "totalUsers": 500,
+      "successfulUsers": 500,
+      "failedUsers": 0,
+      "totalRequests": 10000,
+      "successfulRequests": 0,
+      "failedRequests": 0,
+      "blockedRequests": 10000,
+      "requestsPerSecond": 3498.565448223609,
+      "avgResponseTime": 32.08578577999994,
+      "successRate": 0,
+      "blockRate": 100
+    },
+    {
+      "level": "HEAVY",
+      "config": {
+        "users": 1000,
+        "requestsPerUser": 30,
+        "duration": 120
+      },
+      "actualDuration": 5.9545847,
+      "totalUsers": 1000,
+      "successfulUsers": 1000,
+      "failedUsers": 0,
+      "totalRequests": 30000,
+      "successfulRequests": 0,
+      "failedRequests": 0,
+      "blockedRequests": 30000,
+      "requestsPerSecond": 5038.13473339291,
+      "avgResponseTime": 76.63856097999953,
+      "successRate": 0,
+      "blockRate": 100
+    },
+    {
+      "level": "EXTREME",
+      "config": {
+        "users": 2000,
+        "requestsPerUser": 50,
+        "duration": 180
+      },
+      "actualDuration": 23.0796012,
+      "totalUsers": 2000,
+      "successfulUsers": 2000,
+      "failedUsers": 0,
+      "totalRequests": 100000,
+      "successfulRequests": 0,
+      "failedRequests": 0,
+      "blockedRequests": 100000,
+      "requestsPerSecond": 4332.830499688183,
+      "avgResponseTime": 298.34141792900624,
+      "successRate": 0,
+      "blockRate": 100
+    },
+    {
+      "level": "ULTIMATE",
+      "config": {
+        "users": 5000,
+        "requestsPerUser": 100,
+        "duration": 300
+      },
+      "actualDuration": 308.5859585,
+      "totalUsers": 5000,
+      "successfulUsers": 5000,
+      "failedUsers": 0,
+      "totalRequests": 499751,
+      "successfulRequests": 0,
+      "failedRequests": 14255,
+      "blockedRequests": 485496,
+      "requestsPerSecond": 1619.4871679490238,
+      "avgResponseTime": 2711.788472384322,
+      "successRate": 0,
+      "blockRate": 97.14757949458831
+    }
+  ],
+  "performanceMetrics": {
+    "avgResponseTime": 2711.788472384322,
+    "p95ResponseTime": 6686.375700000033,
+    "p99ResponseTime": 24153.44649999999,
+    "maxResponseTime": 37818.904400000014
+  },
+  "certification": "NEEDS_OPTIMIZATION"
+}

@@ -1,0 +1,131 @@
+{
+  "timestamp": "2025-08-08T21:20:29.621Z",
+  "testDuration": "0.40",
+  "results": {
+    "frontend": {
+      "accessible": true,
+      "responseTime": 31.807999999999996,
+      "contentType": "text/html",
+      "status": 200
+    },
+    "backend": {
+      "accessible": true,
+      "responseTime": 25.218600000000002,
+      "healthStatus": {
+        "status": "ok",
+        "timestamp": "2025-08-08T21:20:29.278Z",
+        "uptime": "321.34",
+        "environment": "mock",
+        "version": "1.0.0-mock",
+        "requestCount": 1911,
+        "stats": {
+          "totalRequests": 1911,
+          "healthChecks": 374,
+          "apiCalls": 1235,
+          "errors": 0,
+          "avgResponseTime": 34.956891741178694
+        }
+      },
+      "apiEndpoints": [
+        {
+          "name": "Readiness Check",
+          "path": "/health/ready",
+          "success": true,
+          "responseTime": 61.09649999999999,
+          "statusCode": 200
+        },
+        {
+          "name": "Auth Login",
+          "path": "/auth/login",
+          "success": true,
+          "responseTime": 15.320700000000016,
+          "statusCode": 200
+        },
+        {
+          "name": "Bookings API",
+          "path": "/bookings",
+          "success": true,
+          "responseTime": 45.78360000000001,
+          "statusCode": 200
+        },
+        {
+          "name": "Sitters Search",
+          "path": "/sitters/search",
+          "success": true,
+          "responseTime": 45.97189999999998,
+          "statusCode": 200
+        },
+        {
+          "name": "User Profile",
+          "path": "/users/profile",
+          "success": true,
+          "responseTime": 15.251800000000003,
+          "statusCode": 200
+        }
+      ]
+    },
+    "integration": {
+      "corsEnabled": true,
+      "apiCallsWork": true,
+      "dataFlow": [
+        {
+          "name": "User Authentication Flow",
+          "steps": [
+            {
+              "endpoint": "/auth/login",
+              "method": "POST",
+              "success": true,
+              "responseTime": 28.677099999999996,
+              "statusCode": 200
+            }
+          ],
+          "success": true,
+          "totalTime": 28.949299999999994
+        },
+        {
+          "name": "Booking Creation Flow",
+          "steps": [
+            {
+              "endpoint": "/sitters/search",
+              "method": "GET",
+              "success": true,
+              "responseTime": 30.74860000000001,
+              "statusCode": 200
+            },
+            {
+              "endpoint": "/bookings",
+              "method": "POST",
+              "success": true,
+              "responseTime": 62.489300000000014,
+              "statusCode": 201
+            }
+          ],
+          "success": true,
+          "totalTime": 93.46449999999999
+        },
+        {
+          "name": "Payment Processing Flow",
+          "steps": [
+            {
+              "endpoint": "/payments/create-intent",
+              "method": "POST",
+              "success": true,
+              "responseTime": 31.039199999999994,
+              "statusCode": 201
+            }
+          ],
+          "success": true,
+          "totalTime": 31.16889999999995
+        }
+      ],
+      "errors": []
+    },
+    "summary": {
+      "overallHealth": "excellent",
+      "readyForProduction": true,
+      "recommendations": [
+        "🎉 Frontend-Backend integration is working correctly!"
+      ]
+    }
+  }
+}
