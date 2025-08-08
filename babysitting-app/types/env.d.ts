@@ -1,0 +1,23 @@
+declare module '@env' {
+  export const EXPO_PUBLIC_API_URL: string;
+  export const EXPO_PUBLIC_WS_URL: string;
+  export const EXPO_PUBLIC_FIREBASE_API_KEY: string;
+  export const EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: string;
+  export const EXPO_PUBLIC_FIREBASE_PROJECT_ID: string;
+  export const EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: string;
+  export const EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: string;
+  export const EXPO_PUBLIC_FIREBASE_APP_ID: string;
+  export const EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: string;
+  export const EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: string;
+  export const EXPO_PUBLIC_APP_ENV: string;
+  export const EXPO_PUBLIC_APP_VERSION: string;
+  export const EXPO_PUBLIC_ENABLE_SECURITY_FEATURES: string;
+  export const EXPO_PUBLIC_ENABLE_BIOMETRIC_AUTH: string;
+  export const EXPO_PUBLIC_ENABLE_GPS_TRACKING: string;
+  export const EXPO_PUBLIC_ENABLE_DEV_TOOLS: string;
+  export const EXPO_PUBLIC_ENABLE_LOGGING: string;
+  export const EXPO_PUBLIC_LOG_LEVEL: string;
+  export const EXPO_PUBLIC_SENTRY_DSN: string;
+  export const EXPO_PUBLIC_ANALYTICS_ENABLED: string;
+  export const EXPO_PUBLIC_ANALYTICS_API_KEY: string;
+}

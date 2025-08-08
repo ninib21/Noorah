@@ -52,7 +52,8 @@
     "tailwindcss": "^3.4.17",
     "react-dom": "19.0.0",
     "react-native-web": "^0.20.0",
-    "@expo/metro-runtime": "~5.0.4"
+    "@expo/metro-runtime": "~5.0.4",
+    "react-native-dotenv": "^3.4.11"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -65,7 +66,8 @@
     "detox": "^20.0.0",
     "playwright": "^1.40.0",
     "typescript": "~5.8.3",
-    "snyk": "^1.1200.0"
+    "snyk": "^1.1200.0",
+    "@types/react-native-dotenv": "^0.2.2"
   },
   "private": true
 }

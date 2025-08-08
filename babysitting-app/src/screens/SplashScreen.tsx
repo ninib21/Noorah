@@ -6,6 +6,7 @@ import {
   Animated,
   Dimensions,
   StatusBar,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -101,6 +102,14 @@ const SplashScreen: React.FC = () => {
         >
           <Text style={styles.versionText}>Version 1.0.0</Text>
           <Text style={styles.copyrightText}>© 2024 NannyRadar</Text>
+
+          {/* Quick Test Access */}
+          <TouchableOpacity
+            style={styles.quickTestButton}
+            onPress={() => navigation.navigate('QuickTest' as never)}
+          >
+            <Text style={styles.quickTestText}>🧪 Quick Test</Text>
+          </TouchableOpacity>
         </Animated.View>
       </LinearGradient>
     </SafeAreaView>
@@ -168,6 +177,20 @@ const styles = StyleSheet.create({
   copyrightText: {
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.6)',
+  },
+  quickTestButton: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  quickTestText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

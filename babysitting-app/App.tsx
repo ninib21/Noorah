@@ -9,9 +9,17 @@ import { store, persistor } from './src/store';
 import SplashScreen from './src/screens/SplashScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import LoginScreen from './src/screens/LoginScreen';
+import SignupScreen from './src/screens/SignupScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import UserTypeSelectionScreen from './src/screens/UserTypeSelectionScreen';
 import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
 import NavigationTestScreen from './src/screens/NavigationTestScreen';
+
+// Import additional screens
+import BookingFlowScreen from './src/screens/parent/BookingFlowScreen';
+import PaymentScreen from './src/screens/parent/PaymentScreen';
+import SitterProfileScreen from './src/screens/parent/SitterProfileScreen';
+import QuickTestScreen from './src/screens/QuickTestScreen';
 
 // Import tab navigators
 import ParentTabNavigator from './src/navigation/ParentTabNavigator';
@@ -55,11 +63,14 @@ export default function App() {
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Onboarding" component={OnboardingScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
             <Stack.Screen name="UserTypeSelection" component={UserTypeSelectionScreen} />
             <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
 
             {/* Navigation Test */}
             <Stack.Screen name="NavigationTest" component={NavigationTestScreen} />
+            <Stack.Screen name="QuickTest" component={QuickTestScreen} />
 
             {/* Main App Flow */}
             <Stack.Screen name="ParentTabs" component={ParentTabNavigator} />
@@ -84,6 +95,11 @@ export default function App() {
             <Stack.Screen name="SitterMessages" component={SitterTabNavigator} />
             <Stack.Screen name="SitterEarnings" component={SitterTabNavigator} />
             <Stack.Screen name="SitterProfile" component={SitterTabNavigator} />
+
+            {/* Additional Screens */}
+            <Stack.Screen name="BookingFlow" component={BookingFlowScreen} />
+            <Stack.Screen name="Payment" component={PaymentScreen} />
+            <Stack.Screen name="SitterProfileView" component={SitterProfileScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </PersistGate>

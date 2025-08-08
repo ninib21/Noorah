@@ -147,15 +147,25 @@ const LoginScreen: React.FC = () => {
               </View>
 
               {!isOtpSent ? (
-                <TouchableOpacity
-                  style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
-                  onPress={handleSendOtp}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.primaryButtonText}>
-                    {isLoading ? 'Sending...' : 'Send OTP'}
-                  </Text>
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity
+                    style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+                    onPress={handleSendOtp}
+                    disabled={isLoading}
+                  >
+                    <Text style={styles.primaryButtonText}>
+                      {isLoading ? 'Sending...' : 'Send OTP'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Forgot Password Link */}
+                  <TouchableOpacity
+                    style={styles.forgotPasswordContainer}
+                    onPress={() => navigation.navigate('ForgotPassword' as never)}
+                  >
+                    <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
+                  </TouchableOpacity>
+                </>
               ) : (
                 <>
                   <View style={styles.inputContainer}>
@@ -225,7 +235,7 @@ const LoginScreen: React.FC = () => {
             {/* Footer */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Onboarding' as never)}>
+              <TouchableOpacity onPress={() => navigation.navigate('Signup' as never)}>
                 <Text style={styles.footerLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>
@@ -402,6 +412,15 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  forgotPasswordContainer: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  forgotPasswordText: {
+    color: '#3A7DFF',
     fontSize: 14,
     fontWeight: '600',
   },
