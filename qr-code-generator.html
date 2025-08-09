@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NannyRadar QR Code Generator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #3A7DFF, #FF7DB9);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            max-width: 500px;
+        }
+        
+        h1 {
+            color: #1F2937;
+            margin-bottom: 20px;
+        }
+        
+        .qr-code {
+            margin: 30px 0;
+            padding: 20px;
+            background: #F8FAFC;
+            border-radius: 12px;
+            border: 2px dashed #3A7DFF;
+        }
+        
+        .instructions {
+            background: #EFF6FF;
+            border: 1px solid #3A7DFF;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .step {
+            margin: 10px 0;
+            padding: 8px 0;
+        }
+        
+        .url-box {
+            background: #F3F4F6;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        
+        .btn {
+            background: #3A7DFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: 600;
+        }
+        
+        .btn:hover {
+            background: #2563EB;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Get NannyRadar on Your Phone</h1>
+        
+        <div class="qr-code">
+            <div id="qrcode"></div>
+            <p><strong>Scan this QR code with your phone camera</strong></p>
+        </div>
+        
+        <div class="instructions">
+            <h3>📱 Phone Testing Instructions:</h3>
+            <div class="step">
+                <strong>1. 📸 Scan QR Code:</strong> Open your phone camera and point at the QR code above
+            </div>
+            <div class="step">
+                <strong>2. 🔗 Tap Link:</strong> Tap the notification that appears
+            </div>
+            <div class="step">
+                <strong>3. 🌐 Open in Browser:</strong> The app will open in your mobile browser
+            </div>
+            <div class="step">
+                <strong>4. 📱 Add to Home Screen:</strong> Tap share button → "Add to Home Screen"
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>🖥️ Desktop Testing:</h3>
+            <div class="step">
+                <strong>Current URL:</strong>
+                <div class="url-box" id="currentUrl">Loading...</div>
+            </div>
+            <div class="step">
+                <strong>Mobile Simulation:</strong> Press F12 → Click device icon → Select iPhone
+            </div>
+        </div>
+        
+        <button class="btn" onclick="copyUrl()">📋 Copy URL</button>
+        <button class="btn" onclick="openApp()">🚀 Open App</button>
+        <button class="btn" onclick="generateNewQR()">🔄 Refresh QR</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        const appUrl = 'http://192.168.0.163:8080/simple-app.html';
+
+        function generateQR() {
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+
+            // Use the actual IP address for phone access
+            const localUrl = 'http://192.168.0.163:8080/simple-app.html';
+            
+            QRCode.toCanvas(qrContainer, localUrl, {
+                width: 200,
+                height: 200,
+                colorDark: '#3A7DFF',
+                colorLight: '#FFFFFF',
+                margin: 2
+            }, function (error) {
+                if (error) {
+                    qrContainer.innerHTML = `
+                        <div style="padding: 20px; color: #DC2626;">
+                            <p><strong>QR Code Generation Failed</strong></p>
+                            <p>Use manual URL instead:</p>
+                            <div style="font-family: monospace; font-size: 12px; background: #FEF2F2; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                                ${appUrl}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        function copyUrl() {
+            navigator.clipboard.writeText(appUrl).then(() => {
+                alert('📋 URL copied to clipboard!');
+            }).catch(() => {
+                prompt('📋 Copy this URL:', appUrl);
+            });
+        }
+        
+        function openApp() {
+            window.open(appUrl, '_blank');
+        }
+        
+        function generateNewQR() {
+            generateQR();
+            alert('🔄 QR code refreshed!');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('currentUrl').textContent = appUrl;
+            generateQR();
+        });
+    </script>
+</body>
+</html>

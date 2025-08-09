@@ -11,7 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import MapView, { Marker, Circle } from 'react-native-maps';
+// Web-compatible map import
+// import MapView, { Marker, Circle } from 'react-native-maps';
 import { GPSTrackingService, GPSLocation, GeofenceZone } from '../services/gps-tracking.service';
 import { EmergencySOSService } from '../services/emergency-sos.service';
 
@@ -248,46 +249,30 @@ const SessionMonitoringScreen: React.FC = () => {
             )}
           </View>
 
-          {/* Map View */}
+          {/* Map View - Web Compatible */}
           {currentLocation && (
             <View style={styles.mapContainer}>
-              <MapView
-                style={styles.map}
-                initialRegion={{
-                  latitude: currentLocation.latitude,
-                  longitude: currentLocation.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }}
-                showsUserLocation={true}
-                showsMyLocationButton={true}
-              >
-                {/* Current location marker */}
-                <Marker
-                  coordinate={{
-                    latitude: currentLocation.latitude,
-                    longitude: currentLocation.longitude,
-                  }}
-                  title="Current Location"
-                  description="Sitter's current position"
-                >
-                  <View style={styles.locationMarker}>
-                    <Ionicons name="location" size={20} color="#3A7DFF" />
-                  </View>
-                </Marker>
-
-                {/* Geofence zones */}
-                {geofenceZones.map((zone) => (
-                  <Circle
-                    key={zone.id}
-                    center={zone.center}
-                    radius={zone.radius}
-                    strokeColor="#FF7DB9"
-                    strokeWidth={2}
-                    fillColor="rgba(255, 125, 185, 0.1)"
-                  />
-                ))}
-              </MapView>
+              <View style={styles.mapPlaceholder}>
+                <Ionicons name="map" size={48} color="#3A7DFF" />
+                <Text style={styles.mapPlaceholderText}>GPS Tracking Active</Text>
+                <Text style={styles.locationText}>
+                  📍 Lat: {currentLocation.latitude.toFixed(6)}
+                </Text>
+                <Text style={styles.locationText}>
+                  📍 Lng: {currentLocation.longitude.toFixed(6)}
+                </Text>
+                <Text style={styles.locationText}>
+                  🎯 Accuracy: {currentLocation.accuracy}m
+                </Text>
+                <View style={styles.geofenceInfo}>
+                  <Text style={styles.geofenceTitle}>Geofence Zones: {geofenceZones.length}</Text>
+                  {geofenceZones.map((zone) => (
+                    <Text key={zone.id} style={styles.geofenceText}>
+                      • {zone.name} ({zone.radius}m radius)
+                    </Text>
+                  ))}
+                </View>
+              </View>
             </View>
           )}
 
@@ -425,6 +410,42 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  mapPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 20,
+  },
+  mapPlaceholderText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  locationText: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 4,
+    fontFamily: 'monospace',
+  },
+  geofenceInfo: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  geofenceTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  geofenceText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 2,
   },
   locationMarker: {
     backgroundColor: '#FFFFFF',

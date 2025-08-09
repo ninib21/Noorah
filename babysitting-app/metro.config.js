@@ -11,4 +11,15 @@ config.resolver.assetExts.push(
 // Add support for TypeScript and JSX files
 config.resolver.sourceExts.push('jsx', 'js', 'ts', 'tsx', 'json');
 
+// Add platform-specific extensions for web compatibility
+config.resolver.platforms = ['web', 'ios', 'android', 'native'];
+
+// Add resolver alias for web compatibility
+config.resolver.alias = {
+  'react-native-maps': 'react-native-web-maps',
+};
+
+// Add web-specific module resolution
+config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
+
 module.exports = config;
