@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NannyRadar - Mobile UI Design</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #FF69B4 0%, #87CEEB 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2C3E50;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .screens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .phone-mockup {
+            background: #2C3E50;
+            border-radius: 30px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phone-mockup::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 6px;
+            background: #34495E;
+            border-radius: 3px;
+        }
+
+        .screen {
+            background: white;
+            border-radius: 20px;
+            height: 600px;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .screen-title {
+            text-align: center;
+            font-weight: 700;
+            color: #FF69B4;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255,105,180,0.1);
+            border-radius: 20px 20px 0 0;
+        }
+
+        /* Landing Page Styles */
+        .landing {
+            background: linear-gradient(135deg, #FF69B4 0%, #87CEEB 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .hero-image {
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        .cta-buttons {
+            margin-top: 40px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #FF69B4;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Login/Signup Styles */
+        .auth-screen {
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .auth-logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #FF69B4;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #E8E8E8;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #FF69B4;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #E8E8E8;
+            border-radius: 12px;
+            background: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* Dashboard Styles */
+        .dashboard {
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .greeting {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2C3E50;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            background: #FF69B4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .booking-card {
+            background: linear-gradient(135deg, #FF69B4, #87CEEB);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .action-btn {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .action-icon {
+            font-size: 2rem;
+            color: #FF69B4;
+            margin-bottom: 10px;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        }
+
+        .nav-item {
+            text-align: center;
+            color: #7F8C8D;
+            font-size: 0.8rem;
+        }
+
+        .nav-item.active {
+            color: #FF69B4;
+        }
+
+        .nav-icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍼 NannyRadar</h1>
+            <p>Modern Mobile UI Design - Pink, Blue & White Theme</p>
+        </div>
+
+        <div class="screens-grid">
+            <!-- Landing Page -->
+            <div class="phone-mockup">
+                <div class="screen">
+                    <div class="landing">
+                        <div>
+                            <div class="logo">🍼 NannyRadar</div>
+                            <div class="tagline">Find trusted babysitters in your neighborhood</div>
+                            <div class="hero-image">
+                                <i class="fas fa-baby"></i>
+                            </div>
+                        </div>
+                        <div class="cta-buttons">
+                            <button class="btn btn-primary">Get Started</button>
+                            <button class="btn btn-secondary">I'm a Sitter</button>
+                            <div style="margin-top: 20px; font-size: 0.9rem; opacity: 0.8;">
+                                <i class="fab fa-apple"></i> App Store &nbsp;&nbsp;
+                                <i class="fab fa-google-play"></i> Google Play
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login/Sign Up -->
+            <div class="phone-mockup">
+                <div class="screen">
+                    <div class="screen-title">Login / Sign Up</div>
+                    <div class="auth-screen">
+                        <div class="auth-logo">🍼 NannyRadar</div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" placeholder="Enter your email">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-input" placeholder="Enter your password">
+                        </div>
+                        
+                        <button class="btn btn-primary" style="background: #FF69B4; color: white; margin-bottom: 20px;">
+                            Sign In
+                        </button>
+                        
+                        <div class="social-login">
+                            <button class="social-btn">
+                                <i class="fab fa-google" style="color: #DB4437;"></i>
+                            </button>
+                            <button class="social-btn">
+                                <i class="fab fa-facebook" style="color: #4267B2;"></i>
+                            </button>
+                            <button class="social-btn">
+                                <i class="fab fa-apple" style="color: #000;"></i>
+                            </button>
+                        </div>
+                        
+                        <p style="margin-top: 20px; color: #7F8C8D;">
+                            Don't have an account? <span style="color: #FF69B4; font-weight: 600;">Sign Up</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parent Dashboard -->
+            <div class="phone-mockup">
+                <div class="screen">
+                    <div class="screen-title">Parent Dashboard</div>
+                    <div class="dashboard">
+                        <div class="dashboard-header">
+                            <div class="greeting">Hi, Sarah! 👋</div>
+                            <div class="notification-icon">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="booking-card">
+                            <h3 style="margin-bottom: 10px;">Upcoming Booking</h3>
+                            <p>📅 Today, 7:00 PM - 11:00 PM</p>
+                            <p>👩‍🦰 Emma Johnson</p>
+                            <p>📍 Your Home</p>
+                        </div>
+                        
+                        <div class="quick-actions">
+                            <button class="action-btn">
+                                <div class="action-icon">🔍</div>
+                                <div>Find Sitter</div>
+                            </button>
+                            <button class="action-btn">
+                                <div class="action-icon">📅</div>
+                                <div>My Bookings</div>
+                            </button>
+                            <button class="action-btn">
+                                <div class="action-icon">⭐</div>
+                                <div>Favorites</div>
+                            </button>
+                            <button class="action-btn">
+                                <div class="action-icon">💬</div>
+                                <div>Messages</div>
+                            </button>
+                        </div>
+                        
+                        <div style="background: #F8F9FA; border-radius: 16px; padding: 20px;">
+                            <h4 style="margin-bottom: 15px; color: #2C3E50;">Recent Activity</h4>
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <div style="width: 40px; height: 40px; background: #87CEEB; border-radius: 50%; margin-right: 15px;"></div>
+                                <div>
+                                    <div style="font-weight: 600;">Booking Completed</div>
+                                    <div style="font-size: 0.9rem; color: #7F8C8D;">with Emma Johnson</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Booking Page -->
+            <div class="phone-mockup">
+                <div class="screen">
+                    <div class="screen-title">Book a Sitter</div>
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="margin-bottom: 15px; color: #2C3E50;">📅 Select Date & Time</h4>
+                            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 15px;">
+                                <div style="text-align: center; padding: 10px; background: #F8F9FA; border-radius: 8px; font-size: 0.8rem;">S</div>
+                                <div style="text-align: center; padding: 10px; background: #F8F9FA; border-radius: 8px; font-size: 0.8rem;">M</div>
+                                <div style="text-align: center; padding: 10px; background: #FF69B4; color: white; border-radius: 8px; font-size: 0.8rem;">T</div>
+                                <div style="text-align: center; padding: 10px; background: #F8F9FA; border-radius: 8px; font-size: 0.8rem;">W</div>
+                                <div style="text-align: center; padding: 10px; background: #F8F9FA; border-radius: 8px; font-size: 0.8rem;">T</div>
+                                <div style="text-align: center; padding: 10px; background: #F8F9FA; border-radius: 8px; font-size: 0.8rem;">F</div>
+                                <div style="text-align: center; padding: 10px; background: #F8F9FA; border-radius: 8px; font-size: 0.8rem;">S</div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button style="flex: 1; padding: 12px; background: #87CEEB; color: white; border: none; border-radius: 12px;">7:00 PM</button>
+                                <button style="flex: 1; padding: 12px; background: #F8F9FA; border: none; border-radius: 12px;">8:00 PM</button>
+                                <button style="flex: 1; padding: 12px; background: #F8F9FA; border: none; border-radius: 12px;">9:00 PM</button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="margin-bottom: 15px; color: #2C3E50;">📍 Location</h4>
+                            <div style="background: #F8F9FA; border-radius: 12px; padding: 15px; display: flex; align-items: center;">
+                                <i class="fas fa-map-marker-alt" style="color: #FF69B4; margin-right: 10px;"></i>
+                                <span>123 Main St, Your City</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="margin-bottom: 15px; color: #2C3E50;">👩‍🦰 Available Sitters</h4>
+                            <div style="background: white; border-radius: 16px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 15px;">
+                                <div style="display: flex; align-items: center;">
+                                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #FF69B4, #87CEEB); border-radius: 50%; margin-right: 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">E</div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; margin-bottom: 5px;">Emma Johnson</div>
+                                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                            <span style="color: #F39C12;">⭐⭐⭐⭐⭐</span>
+                                            <span style="margin-left: 8px; font-size: 0.9rem; color: #7F8C8D;">4.9 (127)</span>
+                                        </div>
+                                        <div style="color: #FF69B4; font-weight: 600;">$25/hour</div>
+                                    </div>
+                                    <div style="background: #FF69B4; color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem;">Select</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: #FF69B4; color: white; border: none; padding: 18px; border-radius: 25px; font-size: 1.1rem; font-weight: 600;">
+                            Book Now - $100
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sitter Profile -->
+            <div class="phone-mockup">
+                <div class="screen">
+                    <div style="position: relative;">
+                        <div style="height: 200px; background: linear-gradient(135deg, #FF69B4, #87CEEB); display: flex; align-items: center; justify-content: center;">
+                            <div style="width: 120px; height: 120px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #FF69B4;">👩‍🦰</div>
+                        </div>
+                        <div style="position: absolute; top: 20px; right: 20px; background: #2ECC71; color: white; padding: 8px 12px; border-radius: 20px; font-size: 0.8rem;">
+                            ✓ Verified
+                        </div>
+                    </div>
+
+                    <div style="padding: 20px;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <h2 style="margin-bottom: 5px;">Emma Johnson</h2>
+                            <div style="color: #7F8C8D; margin-bottom: 10px;">📍 2.3 miles away</div>
+                            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                                <span style="color: #F39C12;">⭐⭐⭐⭐⭐</span>
+                                <span style="margin-left: 8px; color: #7F8C8D;">4.9 (127 reviews)</span>
+                            </div>
+                            <div style="color: #FF69B4; font-size: 1.5rem; font-weight: 700;">$25/hour</div>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="margin-bottom: 15px;">About Me</h4>
+                            <p style="color: #7F8C8D; line-height: 1.5;">Experienced childcare provider with 5+ years caring for children ages 6 months to 12 years. CPR certified and background checked.</p>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="margin-bottom: 15px;">Skills & Certifications</h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <span style="background: #FFB6C1; color: #C71585; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem;">CPR Certified</span>
+                                <span style="background: #B0E0E6; color: #4682B4; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem;">First Aid</span>
+                                <span style="background: #FFB6C1; color: #C71585; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem;">Newborn Care</span>
+                                <span style="background: #B0E0E6; color: #4682B4; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem;">Homework Help</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; margin-top: 30px;">
+                            <button style="flex: 1; background: #87CEEB; color: white; border: none; padding: 15px; border-radius: 25px; font-weight: 600;">
+                                💬 Message
+                            </button>
+                            <button style="flex: 1; background: #FF69B4; color: white; border: none; padding: 15px; border-radius: 25px; font-weight: 600;">
+                                📅 Book Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Screen -->
+            <div class="phone-mockup">
+                <div class="screen">
+                    <div class="screen-title">Payment</div>
+                    <div style="padding: 20px;">
+                        <div style="background: #F8F9FA; border-radius: 16px; padding: 20px; margin-bottom: 25px;">
+                            <h4 style="margin-bottom: 15px; color: #2C3E50;">Booking Summary</h4>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Sitter: Emma Johnson</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Date: Today, 7:00 PM - 11:00 PM</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Duration: 4 hours</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-top: 15px; border-top: 1px solid #E8E8E8;">
+                                <span style="font-weight: 600;">Total:</span>
+                                <span style="font-weight: 700; color: #FF69B4; font-size: 1.2rem;">$100.00</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="margin-bottom: 15px; color: #2C3E50;">Payment Method</h4>
+                            <div style="background: white; border: 2px solid #FF69B4; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center;">
+                                <i class="fab fa-cc-stripe" style="font-size: 1.5rem; color: #6772E5; margin-right: 15px;"></i>
+                                <div>
+                                    <div style="font-weight: 600;">•••• •••• •••• 4242</div>
+                                    <div style="font-size: 0.9rem; color: #7F8C8D;">Expires 12/25</div>
+                                </div>
+                                <i class="fas fa-check-circle" style="color: #FF69B4; margin-left: auto;"></i>
+                            </div>
+                            <div style="background: #F8F9FA; border-radius: 12px; padding: 15px; display: flex; align-items: center;">
+                                <i class="fab fa-paypal" style="font-size: 1.5rem; color: #0070BA; margin-right: 15px;"></i>
+                                <span>PayPal</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="margin-bottom: 15px; color: #2C3E50;">Promo Code</h4>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" placeholder="Enter promo code" style="flex: 1; padding: 15px; border: 2px solid #E8E8E8; border-radius: 12px;">
+                                <button style="background: #87CEEB; color: white; border: none; padding: 15px 20px; border-radius: 12px;">Apply</button>
+                            </div>
+                        </div>
+
+                        <button style="width: 100%; background: #FF69B4; color: white; border: none; padding: 18px; border-radius: 25px; font-size: 1.1rem; font-weight: 600; margin-top: 20px;">
+                            Confirm Payment - $100.00
+                        </button>
+
+                        <p style="text-align: center; margin-top: 15px; font-size: 0.9rem; color: #7F8C8D;">
+                            🔒 Your payment is secure and encrypted
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Design Features Section -->
+        <div style="background: white; border-radius: 20px; padding: 30px; margin-top: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #2C3E50;">🎨 Design Features</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🎨</div>
+                    <h4 style="margin-bottom: 10px; color: #FF69B4;">Color Palette</h4>
+                    <p style="color: #7F8C8D;">Pink (#FF69B4), Blue (#87CEEB), and White with subtle gradients</p>
+                </div>
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">📱</div>
+                    <h4 style="margin-bottom: 10px; color: #87CEEB;">Mobile-First</h4>
+                    <p style="color: #7F8C8D;">Optimized for iOS and Android with responsive design</p>
+                </div>
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">✨</div>
+                    <h4 style="margin-bottom: 10px; color: #FF69B4;">Animations</h4>
+                    <p style="color: #7F8C8D;">Smooth transitions and hover effects for better UX</p>
+                </div>
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🔤</div>
+                    <h4 style="margin-bottom: 10px; color: #87CEEB;">Typography</h4>
+                    <p style="color: #7F8C8D;">Nunito & Poppins fonts for friendly, professional feel</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
