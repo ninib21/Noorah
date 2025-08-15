@@ -407,7 +407,7 @@ export class SitterMatchService {
   }
 
   private generateRecommendations(sitter: User, criteria: MatchCriteria): string[] {
-    const recommendations = [];
+    const recommendations: string[] = [];
     
     // In a real implementation, you'd check sitter properties
     console.log('Generating recommendations for sitter:', sitter.id);
@@ -462,7 +462,7 @@ export class SitterMatchService {
   }
 
   private generateTrustRecommendations(factors: any): string[] {
-    const recommendations = [];
+    const recommendations: string[] = [];
     
     if (factors.backgroundCheck < 1.0) {
       recommendations.push('Complete background check verification');
@@ -493,7 +493,7 @@ export class SitterMatchService {
 
   private analyzeBookingPatterns(bookings: Booking[]): any[] {
     // Analyze booking patterns for rebooking suggestions
-    const patterns = [];
+    const patterns: any[] = [];
     
     // Group by day of week and time
     const dayTimeGroups: any = {};

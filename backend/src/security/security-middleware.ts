@@ -307,7 +307,7 @@ export class InputSanitizer {
     if (typeof obj === 'object' && obj !== null) {
       const sanitized = {};
       for (const [key, value] of Object.entries(obj)) {
-        sanitized[this.sanitizeString(key)] = this.sanitizeObject(value);
+        (sanitized as any)[this.sanitizeString(key)] = this.sanitizeObject(value);
       }
       return sanitized;
     }

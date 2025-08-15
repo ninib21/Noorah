@@ -1,15 +1,25 @@
 {
-  "name": "backend",
+  "name": "nannyradar-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "NannyRadar Backend API",
+  "main": "dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "keywords": ["nestjs", "babysitting", "api"],
+  "author": "Naimah Barnes",
+  "license": "MIT",
   "dependencies": {
     "@nestjs/cache-manager": "^3.0.1",
     "@nestjs/common": "^11.1.5",
@@ -53,9 +63,13 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.10",
+    "@nestjs/testing": "^11.1.5",
     "@types/bcryptjs": "^2.4.6",
+    "@types/compression": "^1.7.5",
+    "@types/jest": "^29.5.0",
     "@types/node": "^24.1.0",
     "@types/passport-jwt": "^4.0.1",
+    "jest": "^29.5.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"

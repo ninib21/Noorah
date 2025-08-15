@@ -87,7 +87,7 @@ export class SecureRegisterDto extends SecureBaseDto {
   email: string;
 
   @ApiProperty({ example: '+1234567890' })
-  @IsPhoneNumber(null, { message: 'Please provide a valid phone number' })
+  @IsPhoneNumber(undefined, { message: 'Please provide a valid phone number' })
   @IsNotEmpty({ message: 'Phone number is required' })
   phone: string;
 

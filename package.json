@@ -3,10 +3,7 @@
   "version": "1.0.0",
   "description": "NannyRadar - A comprehensive babysitting app with diamond-solid security",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
+
   "scripts": {
     "install:all": "npm install && npm run install:frontend && npm run install:backend",
     "install:frontend": "cd frontend && npm install",

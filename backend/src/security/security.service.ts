@@ -222,7 +222,7 @@ export class SecurityService {
     const encryptionKey = key || process.env.ENCRYPTION_KEY || crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);
     
-    const cipher = crypto.createCipher('aes-256-gcm', encryptionKey);
+    const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(encryptionKey.toString().padEnd(32, '0').slice(0, 32)), iv);
     let encrypted = cipher.update(data, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     
@@ -245,7 +245,7 @@ export class SecurityService {
     const encrypted = encryptedData.slice(0, -authTagLength * 2);
     const authTag = Buffer.from(encryptedData.slice(-authTagLength * 2), 'hex');
     
-    const decipher = crypto.createDecipher('aes-256-gcm', encryptionKey);
+    const decipher = crypto.createDecipheriv('aes-256-gcm', Buffer.from((encryptionKey || 'default-key').toString().padEnd(32, '0').slice(0, 32)), Buffer.from(iv, 'hex'));
     decipher.setAuthTag(authTag);
     
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
@@ -556,7 +556,7 @@ export class SecurityService {
   }
 
   private async detectBookingAnomalies(booking: any, user: any): Promise<string[]> {
-    const anomalies = [];
+    const anomalies: string[] = [];
 
     // Check for unusual booking times
     const bookingTime = new Date(booking.startTime);

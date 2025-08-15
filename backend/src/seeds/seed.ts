@@ -215,7 +215,7 @@ export class SeedService {
     const parents = users.filter(user => user.userType === UserType.PARENT);
     const sitters = users.filter(user => user.userType === UserType.SITTER);
 
-    const bookings = [];
+    const bookings: any[] = [];
     const now = new Date();
 
     for (let i = 0; i < 10; i++) {
@@ -231,18 +231,18 @@ export class SeedService {
         startTime,
         endTime,
         childrenCount: i % 2 === 0 ? 1 : 2,
-        specialInstructions: i % 3 === 0 ? 'Please bring educational toys' : null,
+        specialInstructions: i % 3 === 0 ? 'Please bring educational toys' : undefined,
         location: `Address ${i + 1}, City, State`,
         hourlyRate: sitter.hourlyRate,
         status: i < 3 ? BookingStatus.COMPLETED : 
                 i < 6 ? BookingStatus.CONFIRMED : 
                 BookingStatus.PENDING,
         totalAmount: sitter.hourlyRate * 4,
-        confirmedAt: i < 6 ? new Date(startTime.getTime() - (24 * 60 * 60 * 1000)) : null,
-        startedAt: i < 3 ? startTime : null,
-        completedAt: i < 3 ? endTime : null,
-        rating: i < 3 ? 4 + (Math.random() * 1) : null,
-        review: i < 3 ? `Great experience with ${sitter.firstName}!` : null,
+        confirmedAt: i < 6 ? new Date(startTime.getTime() - (24 * 60 * 60 * 1000)) : undefined,
+        startedAt: i < 3 ? startTime : undefined,
+        completedAt: i < 3 ? endTime : undefined,
+        rating: i < 3 ? 4 + (Math.random() * 1) : undefined,
+        review: i < 3 ? `Great experience with ${sitter.firstName}!` : undefined,
         checkIns: i < 3 ? JSON.stringify([
           { time: startTime, location: { latitude: 40.7128, longitude: -74.0060, address: 'New York, NY' }, photos: [] }
         ]) : null,
@@ -280,10 +280,10 @@ export class SeedService {
       amount: booking.totalAmount,
       fee: booking.totalAmount * 0.1, // 10% platform fee
       totalAmount: booking.totalAmount * 1.1,
-      stripePaymentIntentId: index < 6 ? `pi_${Math.random().toString(36).substr(2, 9)}` : null,
-      stripeTransferId: index < 3 ? `tr_${Math.random().toString(36).substr(2, 9)}` : null,
+      stripePaymentIntentId: index < 6 ? `pi_${Math.random().toString(36).substr(2, 9)}` : undefined,
+      stripeTransferId: index < 3 ? `tr_${Math.random().toString(36).substr(2, 9)}` : undefined,
       description: `Payment for booking ${booking.id}`,
-      processedAt: index < 6 ? new Date() : null,
+      processedAt: index < 6 ? new Date() : undefined,
       userId: booking.parentId,
       bookingId: booking.id,
     }));
@@ -314,7 +314,7 @@ export class SeedService {
   private async createMessages(users: User[], bookings: Booking[]): Promise<void> {
     const messageRepository = this.dataSource.getRepository(Message);
 
-    const messages = [];
+    const messages: any[] = [];
     
     bookings.forEach((booking, bookingIndex) => {
       // Create conversation between parent and sitter

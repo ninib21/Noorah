@@ -30,7 +30,7 @@ export class FileService {
       console.log('AWS S3 upload would happen here');
       return `https://${this.configService.get<string>('AWS_S3_BUCKET')}.s3.amazonaws.com/${fileName}`;
     } catch (error) {
-      throw new BadRequestException(`File upload failed: ${error.message}`);
+      throw new BadRequestException(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -53,7 +53,7 @@ export class FileService {
       console.log('AWS S3 upload would happen here');
       return `https://${this.configService.get<string>('AWS_S3_BUCKET')}.s3.amazonaws.com/${fileName}`;
     } catch (error) {
-      throw new BadRequestException(`Image upload failed: ${error.message}`);
+      throw new BadRequestException(`Image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -67,7 +67,10 @@ export class FileService {
 
       // Use callback-based approach for AWS SDK v2
       return new Promise((resolve, reject) => {
-        this.s3.deleteObject(deleteParams, (err) => {
+        this.s3.deleteObject({
+          Bucket: process.env.AWS_S3_BUCKET || 'default-bucket',
+          Key: key,
+        }, (err) => {
           if (err) {
             reject(new BadRequestException(`File deletion failed: ${err.message}`));
           } else {
@@ -76,7 +79,7 @@ export class FileService {
         });
       });
     } catch (error) {
-      throw new BadRequestException(`File deletion failed: ${error.message}`);
+      throw new BadRequestException(`File deletion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -99,7 +102,7 @@ export class FileService {
         });
       });
     } catch (error) {
-      throw new BadRequestException(`Failed to generate signed URL: ${error.message}`);
+      throw new BadRequestException(`Failed to generate signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

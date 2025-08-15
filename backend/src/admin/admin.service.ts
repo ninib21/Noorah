@@ -246,7 +246,7 @@ export class AdminService {
       });
     }
 
-    return this.bookingRepository.findOne({ where: { id: bookingId } });
+    return booking;
   }
 
   async getActiveBookings(): Promise<Booking[]> {
@@ -312,7 +312,7 @@ export class AdminService {
       await this.userRepository.query('SELECT 1');
       return { status: 'healthy', responseTime: 0 };
     } catch (error) {
-      return { status: 'unhealthy', error: error.message };
+      return { status: 'unhealthy', error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 

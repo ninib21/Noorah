@@ -41,8 +41,8 @@ export class PaymentsService {
   private stripe: Stripe;
 
   constructor(private configService: ConfigService) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2023-08-16',
+    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_default', {
+      apiVersion: '2025-07-30.basil',
     });
   }
 
@@ -62,7 +62,7 @@ export class PaymentsService {
         paymentIntentId: paymentIntent.id,
       };
     } catch (error) {
-      throw new BadRequestException(`Payment intent creation failed: ${error.message}`);
+      throw new BadRequestException(`Payment intent creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -155,7 +155,7 @@ export class PaymentsService {
 
       // Create account link for updates if needed
       let onboardingUrl: string | undefined;
-      if (account.requirements?.currently_due?.length > 0) {
+      if (account.requirements?.currently_due && account.requirements.currently_due.length > 0) {
         const accountLink = await this.stripe.accountLinks.create({
           account: account.id,
           refresh_url: `${this.configService.get<string>('FRONTEND_URL')}/sitter/onboarding`,

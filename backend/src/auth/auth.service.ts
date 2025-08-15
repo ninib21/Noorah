@@ -217,8 +217,8 @@ export class AuthService {
     // Update password and clear reset token
     await this.userRepository.update(user.id, {
       password: passwordHash,
-      resetPasswordToken: null,
-      resetPasswordExpires: null,
+      resetPasswordToken: undefined,
+      resetPasswordExpires: undefined,
     });
   }
 
@@ -240,8 +240,8 @@ export class AuthService {
     // Mark email as verified
     await this.userRepository.update(user.id, {
       emailVerified: true,
-      verificationToken: null,
-      verificationExpires: null,
+      verificationToken: undefined,
+      verificationExpires: undefined,
     });
 
     return { message: 'Email verified successfully' };

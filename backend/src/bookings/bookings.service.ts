@@ -18,10 +18,14 @@ export class BookingsService {
   }
 
   async findOne(id: string): Promise<Booking> {
-    return this.bookingRepository.findOne({
+    const booking = await this.bookingRepository.findOne({
       where: { id },
       relations: ['sitter', 'parent'],
     });
+    if (!booking) {
+      throw new Error('Booking not found');
+    }
+    return booking;
   }
 
   async create(bookingData: Partial<Booking>): Promise<Booking> {
