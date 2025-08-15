@@ -1,189 +1,113 @@
-# 🏠 NannyRadar - Smart Babysitting Platform
+# NannyRadar Babysitting App
 
-A comprehensive, AI-powered babysitting platform that connects parents with trusted sitters, featuring advanced security, real-time monitoring, and intelligent matching.
+A comprehensive babysitting application with diamond-solid security, built with React Native frontend and NestJS backend.
 
-## 🚀 Features
-
-### 🔐 Military-Grade Security
-- **End-to-End Encryption**: AES-256-GCM encryption for all sensitive data
-- **Biometric Authentication**: Fingerprint and Face ID support
-- **Multi-Factor Authentication**: TOTP-based 2FA with backup codes
-- **Real-Time GPS Tracking**: High-accuracy location monitoring with geofencing
-- **Emergency SOS System**: One-tap emergency alerts with automatic escalation
-
-### 🤖 AI-Powered Matching
-- **Smart Sitter Matching**: Location and rating-based recommendations
-- **Booking Recommendations**: AI-driven booking suggestions
-- **Voice Assistant**: Hands-free app interaction
-- **Translation Services**: Multi-language support
-
-### 💳 Secure Payments
-- **Stripe Connect Integration**: Secure marketplace payments
-- **Automatic Payouts**: Direct deposits to sitter accounts
-- **Payment Protection**: Escrow and dispute resolution
-- **Tipping System**: In-app tipping with rebooking incentives
-
-### 📱 Modern Mobile App
-- **React Native**: Cross-platform iOS and Android support
-- **Expo Framework**: Rapid development and deployment
-- **Real-Time Updates**: Live notifications and status updates
-- **Offline Support**: Core functionality without internet
-
-## 🏗️ Architecture
+## Project Structure
 
 ```
-nannyradar/
-├── 📱 babysitting-app/          # React Native Frontend
-│   ├── src/
-│   │   ├── screens/             # UI Screens
-│   │   ├── components/          # Reusable Components
-│   │   ├── services/            # API Services
-│   │   ├── store/               # Redux State Management
-│   │   └── navigation/          # App Navigation
-│   └── assets/                  # Images, Icons, Fonts
-├── 🔧 backend/                  # NestJS Backend API
-│   ├── src/
-│   │   ├── auth/                # Authentication & Authorization
-│   │   ├── bookings/            # Booking Management
-│   │   ├── payments/            # Payment Processing
-│   │   ├── sitters/             # Sitter Management
-│   │   ├── users/               # User Management
-│   │   ├── security/            # Security Features
-│   │   └── monitoring/          # Health & Metrics
-│   └── test/                    # Backend Tests
-├── 🐳 infrastructure/           # Docker & Deployment
-├── 📚 docs/                     # Documentation
-└── 🧪 test/                     # E2E Tests
+├── frontend/           # React Native mobile application
+│   ├── src/           # Main source code
+│   ├── assets/        # Images, icons, and other assets
+│   ├── e2e/           # End-to-end tests
+│   └── ...            # React Native configuration files
+├── backend/           # NestJS API server
+│   ├── src/           # Backend source code
+│   ├── test/          # Backend tests
+│   └── ...            # NestJS configuration files
+├── docs/              # Documentation files
+│   ├── README.md      # Main documentation
+│   ├── SECURITY_IMPLEMENTATION_README.md
+│   ├── TESTING_GUIDE.md
+│   └── ...            # Other documentation
+├── tests/             # Integration and stress tests
+│   ├── *.test.js      # Test files
+│   └── *.json         # Test reports
+├── scripts/           # Setup and utility scripts
+├── infrastructure/    # Docker and deployment configs
+└── package.json       # Root package.json with workspace configuration
 ```
 
-## 🛠️ Quick Start
+## Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- Expo CLI
-- PostgreSQL 14+
-- Redis (optional)
+- Node.js >= 16.0.0
+- npm >= 8.0.0
+- React Native development environment
+- PostgreSQL database
 
-### Frontend Setup
+### Installation
+
+1. Install all dependencies:
 ```bash
-cd babysitting-app
-npm install
-npx expo start
+npm run install:all
 ```
 
-### Backend Setup
+2. Set up environment variables:
 ```bash
-cd backend
-npm install
-npm run start:dev
+# Copy environment files
+cp backend/env.example backend/.env
+# Edit the .env file with your configuration
 ```
 
-### Database Setup
+3. Start the development servers:
+
+**Backend:**
 ```bash
-# Create database
-createdb nannyradar
-
-# Run migrations
-cd backend
-npm run migration:run
-
-# Seed data (optional)
-npm run seed
+npm run start:backend
 ```
 
-## 🔧 Configuration
-
-### Environment Variables
-Create `.env` files in both `babysitting-app/` and `backend/` directories:
-
-**Frontend (.env)**
-```env
-EXPO_PUBLIC_API_URL=http://localhost:3001
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_key
-EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_key
-```
-
-**Backend (.env)**
-```env
-DATABASE_URL=postgresql://user:pass@localhost:5432/nannyradar
-JWT_SECRET=your_jwt_secret
-STRIPE_SECRET_KEY=your_stripe_key
-```
-
-## 🧪 Testing
-
-### Frontend Tests
+**Frontend:**
 ```bash
-cd babysitting-app
-npm run test
-npm run test:e2e
+npm run start:frontend
 ```
 
-### Backend Tests
-```bash
-cd backend
-npm run test
-npm run test:e2e
-```
+## Available Scripts
 
-### Security Tests
-```bash
-npm run test:security
-npm run test:owasp
-npm run test:snyk
-```
+- `npm run install:all` - Install dependencies for all packages
+- `npm run start:frontend` - Start the React Native development server
+- `npm run start:backend` - Start the NestJS development server
+- `npm run build:frontend` - Build the frontend for production
+- `npm run build:backend` - Build the backend for production
+- `npm run test:all` - Run all tests (frontend + backend)
+- `npm run test:e2e` - Run integration tests
+- `npm run lint:all` - Run linting for all packages
 
-## 🚀 Deployment
+## Development
 
-### Frontend (Expo)
-```bash
-cd babysitting-app
-npx expo build:ios
-npx expo build:android
-```
+### Frontend Development
+The frontend is a React Native application located in the `frontend/` directory. It includes:
+- React Navigation for routing
+- Redux Toolkit for state management
+- TypeScript for type safety
+- Comprehensive UI components
 
-### Backend (Docker)
-```bash
-cd backend
-docker build -t nannyradar-backend .
-docker run -p 3001:3001 nannyradar-backend
-```
+### Backend Development
+The backend is a NestJS application located in the `backend/` directory. It includes:
+- RESTful API endpoints
+- JWT authentication
+- PostgreSQL database integration
+- Comprehensive security features
 
-## 📊 Monitoring
+### Testing
+- Unit tests are located within each package
+- Integration tests are in the `tests/` directory
+- E2E tests are in `frontend/e2e/`
 
-- **Health Checks**: `/api/v1/health`
-- **API Documentation**: `/api/docs`
-- **Metrics**: Prometheus endpoints
-- **Logs**: Structured JSON logging
+## Documentation
 
-## 🔒 Security
+Detailed documentation is available in the `docs/` directory:
+- [Security Implementation](docs/SECURITY_IMPLEMENTATION_README.md)
+- [Testing Guide](docs/TESTING_GUIDE.md)
+- [Local Development Setup](docs/LOCAL_DEVELOPMENT_SETUP.md)
+- [API Documentation](docs/AI_SYSTEMS_README.md)
 
-- **Encryption**: AES-256-GCM for data at rest
-- **Transport**: TLS 1.3 for all communications
-- **Authentication**: JWT with refresh tokens
-- **Authorization**: Role-based access control
-- **Audit Logging**: Complete activity tracking
+## Contributing
 
-## 🤝 Contributing
+1. Follow the established project structure
+2. Write tests for new features
+3. Update documentation as needed
+4. Follow the coding standards defined in each package
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## License
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 📞 Support
-
-- **Email**: support@nannyradar.com
-- **Documentation**: [docs.nannyradar.com](https://docs.nannyradar.com)
-- **GitHub Issues**: [Report a bug](https://github.com/nannyradar/babysitting-app/issues)
-
----
-
-**🔒 Security Notice**: This application handles sensitive personal data and implements military-grade security measures. Always test security features in controlled environments before deployment.
-
-**⚠️ Emergency Features**: The emergency SOS system is designed for real emergency situations. Misuse may result in legal consequences. 
+MIT License - see LICENSE file for details

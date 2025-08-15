@@ -1,9 +1,52 @@
 {
+  "name": "nannyradar-babysitting-app",
+  "version": "1.0.0",
+  "description": "NannyRadar - A comprehensive babysitting app with diamond-solid security",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm run install:frontend && npm run install:backend",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install",
+    "start:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && npm run start:dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend && npm test",
+    "test:all": "npm run test:frontend && npm run test:backend",
+    "test:e2e": "cd tests && npm test",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:all": "npm run lint:frontend && npm run lint:backend"
+  },
   "dependencies": {
     "@types/aws-sdk": "^0.0.42",
     "@types/multer": "^2.0.0",
     "prom-client": "^15.1.3",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
-  }
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ninib21/nannyradar-babysitting-app.git"
+  },
+  "keywords": [
+    "babysitting",
+    "childcare",
+    "react-native",
+    "nestjs",
+    "security",
+    "mobile-app"
+  ],
+  "author": "Naimah Barnes",
+  "license": "MIT"
 }
