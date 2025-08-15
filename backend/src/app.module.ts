@@ -13,6 +13,7 @@ import { FileModule } from './file/file.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
 import { SearchModule } from './search/search.module';
 import { CommunicationModule } from './communication/communication.module';
+import { FirebaseModule } from './firebase/firebase.module';
 import { User } from './entities/user.entity';
 import { SitterProfile } from './entities/sitter-profile.entity';
 import { ParentProfile } from './entities/parent-profile.entity';
@@ -29,12 +30,8 @@ import { Message } from './entities/message.entity';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432') || 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'password',
-      database: process.env.DB_DATABASE || 'nannyradar',
+      type: 'sqlite',
+      database: process.env.DB_PATH || 'nannyradar.db',
       entities: [
         User,
         SitterProfile,
@@ -46,8 +43,8 @@ import { Message } from './entities/message.entity';
         VerificationDocument,
         Message,
       ],
-      synchronize: process.env.NODE_ENV !== 'production',
-      logging: process.env.NODE_ENV !== 'production',
+      synchronize: true,
+      logging: process.env.NODE_ENV === 'development',
     }),
     AuthModule,
     UsersModule,
@@ -61,6 +58,7 @@ import { Message } from './entities/message.entity';
     MonitoringModule,
     SearchModule,
     CommunicationModule,
+    FirebaseModule,
   ],
 })
 export class AppModule {} 

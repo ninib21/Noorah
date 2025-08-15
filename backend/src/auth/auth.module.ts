@@ -9,11 +9,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { User } from '../entities/user.entity';
 import { SitterProfile } from '../entities/sitter-profile.entity';
 import { ParentProfile } from '../entities/parent-profile.entity';
+import { FirebaseModule } from '../firebase/firebase.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, SitterProfile, ParentProfile]),
     PassportModule,
+    FirebaseModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

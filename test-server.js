@@ -37,7 +37,14 @@ const server = http.createServer((req, res) => {
 });
 
 const PORT = 3001;
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`🚀 NannyRadar Test Backend running on http://localhost:${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🧪 Auth test page: file:///h:/bidayax-project-ng/babysitting app/test-auth.html`);
+}).on('error', (err) => {
+  console.error('❌ Server failed to start:', err.message);
+  if (err.code === 'EADDRINUSE') {
+    console.log(`Port ${PORT} is already in use. Trying port ${PORT + 1}...`);
+    server.listen(PORT + 1, '127.0.0.1');
+  }
 });

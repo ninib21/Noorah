@@ -17,7 +17,11 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
-  "keywords": ["nestjs", "babysitting", "api"],
+  "keywords": [
+    "nestjs",
+    "babysitting",
+    "api"
+  ],
   "author": "Naimah Barnes",
   "license": "MIT",
   "dependencies": {
@@ -44,6 +48,7 @@
     "class-validator": "^0.14.2",
     "compression": "^1.8.1",
     "express-rate-limit": "^8.0.1",
+    "firebase-admin": "^13.4.0",
     "helmet": "^8.1.0",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
@@ -55,6 +60,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "sharp": "^0.34.3",
+    "sqlite3": "^5.1.7",
     "stripe": "^18.4.0",
     "twilio": "^5.8.0",
     "typeorm": "^0.3.25",

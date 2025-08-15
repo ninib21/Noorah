@@ -15,6 +15,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { SitterProfile } from '../entities/sitter-profile.entity';
 import { ParentProfile } from '../entities/parent-profile.entity';
+import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +28,7 @@ export class AuthService {
     private parentProfileRepository: Repository<ParentProfile>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private firebaseService: FirebaseService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
