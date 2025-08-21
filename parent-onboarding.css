@@ -1,0 +1,2 @@
+.parent-wizard .progress-wrap{display:flex;align-items:center;gap:10px;margin:8px 0 6px}.parent-wizard .progress-bar{flex:1;height:8px;background:#EEE;border-radius:6px;overflow:hidden}.parent-wizard .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#87CEEB,#FF69B4);transition:width .3s ease}.parent-wizard .progress-label{color:#7F8C8D;font-size:.9rem;min-width:86px;text-align:right}
+

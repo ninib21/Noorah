@@ -1,0 +1,136 @@
+{
+  "sessions": [
+    {
+      "id": "a35fe2f3bc",
+      "bookingId": "demo-booking",
+      "sitterId": "sitter-1",
+      "parentId": "parent-1",
+      "intervalSec": 3,
+      "graceSec": 2,
+      "startedAt": 1755575155708,
+      "lastCheckInAt": 1755575155708,
+      "status": "missed",
+      "share": [],
+      "geo": {
+        "enabled": false,
+        "radius": 100,
+        "center": null
+      },
+      "events": [
+        {
+          "ts": 1755575630371,
+          "type": "missed",
+          "payload": {
+            "lastCheckInAt": 1755575155708,
+            "intervalSec": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "15508e6020",
+      "bookingId": "demo-booking",
+      "sitterId": "sitter-1",
+      "parentId": "parent-1",
+      "intervalSec": 3,
+      "graceSec": 2,
+      "startedAt": 1755575235231,
+      "lastCheckInAt": 1755575235231,
+      "status": "missed",
+      "share": [],
+      "geo": {
+        "enabled": false,
+        "radius": 100,
+        "center": null
+      },
+      "events": [
+        {
+          "ts": 1755575630374,
+          "type": "missed",
+          "payload": {
+            "lastCheckInAt": 1755575235231,
+            "intervalSec": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "168bb9d053",
+      "bookingId": "demo-booking",
+      "sitterId": "sitter-1",
+      "parentId": "parent-1",
+      "intervalSec": 3,
+      "graceSec": 2,
+      "startedAt": 1755575629427,
+      "lastCheckInAt": 1755575629791,
+      "status": "stopped",
+      "share": [],
+      "geo": {
+        "enabled": false,
+        "radius": 100,
+        "center": null
+      },
+      "events": [
+        {
+          "ts": 1755575635904,
+          "type": "stop",
+          "payload": {}
+        },
+        {
+          "ts": 1755575635409,
+          "type": "missed",
+          "payload": {
+            "lastCheckInAt": 1755575629791,
+            "intervalSec": 3
+          }
+        },
+        {
+          "ts": 1755575629791,
+          "type": "check-in",
+          "payload": {
+            "lastCheckInAt": 1755575629791
+          }
+        }
+      ]
+    },
+    {
+      "id": "572002f83c",
+      "bookingId": "demo-booking",
+      "sitterId": "sitter-1",
+      "parentId": "parent-1",
+      "intervalSec": 3,
+      "graceSec": 2,
+      "startedAt": 1755576317095,
+      "lastCheckInAt": 1755576317503,
+      "status": "stopped",
+      "share": [],
+      "geo": {
+        "enabled": false,
+        "radius": 100,
+        "center": null
+      },
+      "events": [
+        {
+          "ts": 1755576323655,
+          "type": "stop",
+          "payload": {}
+        },
+        {
+          "ts": 1755576323034,
+          "type": "missed",
+          "payload": {
+            "lastCheckInAt": 1755576317503,
+            "intervalSec": 3
+          }
+        },
+        {
+          "ts": 1755576317503,
+          "type": "check-in",
+          "payload": {
+            "lastCheckInAt": 1755576317503
+          }
+        }
+      ]
+    }
+  ]
+}
