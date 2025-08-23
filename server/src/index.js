@@ -1,8 +1,11 @@
+// NannyRadar Server - Production Ready with Real Stripe Integration
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
 const { WebSocketServer } = require('ws');
-
-
 
 const crypto = require('crypto');
 
@@ -16,6 +19,13 @@ const { body, param, query, validationResult } = require('express-validator');
 const Jimp = require('jimp');
 const PDFDocument = require('pdfkit');
 const nodemailer = require('nodemailer');
+
+// Import production services
+const stripeService = require('./stripe-service');
+const emailService = require('./email-service');
+const smsService = require('./sms-service');
+const monitoringService = require('./monitoring-service');
+const { requestTracker, errorTracker, securityTracker } = require('./monitoring-middleware');
 
 function nanoid(n=10){
   try{
@@ -71,12 +81,62 @@ loadAll();
 
 // Web server
 const app = express();
-// Global rate limiter (mock-friendly but protective)
-app.use(rateLimit({ windowMs: 60*1000, max: 120, standardHeaders: true, legacyHeaders: false }));
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: Date.now(), features: 20, server: 'NannyRadar' });
+// Production middleware
+app.use(helmet()); // Security headers
+app.use(compression()); // Gzip compression
+
+// Global rate limiter (production-ready)
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests from this IP, please try again later.'
+}));
+
+// Health check endpoint with all services
+app.get('/health', async (req, res) => {
+  const stripeHealth = await stripeService.healthCheck();
+  const emailHealth = await emailService.healthCheck();
+  const smsHealth = await smsService.healthCheck();
+  const monitoringHealth = await monitoringService.healthCheck();
+
+  res.json({
+    status: 'ok',
+    timestamp: Date.now(),
+    features: 20,
+    server: 'NannyRadar',
+    environment: process.env.NODE_ENV || 'development',
+    services: {
+      stripe: stripeHealth.status,
+      email: emailHealth.status,
+      sms: smsHealth.status
+    },
+    monitoring: monitoringHealth
+  });
+});
+
+// Detailed metrics endpoint (admin only)
+app.get('/api/admin/metrics', async (req, res) => {
+  try {
+    const metrics = monitoringService.exportMetrics();
+    res.json(metrics);
+  } catch (error) {
+    res.status(500).json({ error: 'metrics_unavailable', message: error.message });
+  }
+});
+
+// System status endpoint
+app.get('/api/status', async (req, res) => {
+  const health = await monitoringService.healthCheck();
+  res.json({
+    status: health.status,
+    uptime: health.metrics.uptime,
+    requests: health.metrics.requests,
+    errors: health.metrics.errors,
+    timestamp: health.timestamp
+  });
 });
 
 function validate(req, res, next){
@@ -89,8 +149,21 @@ const JWT_SECRET = process.env.NR_JWT_SECRET || 'dev-secret-not-for-prod';
 // In-memory rotation map: sessionId -> current jwt id (jti)
 const activeJti = new Map();
 
-app.use(cors());
-app.use(express.json());
+// CORS configuration
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+
+// JSON parsing with webhook support
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
+app.use(express.json({ limit: '10mb' }));
+
+// Monitoring middleware
+app.use(requestTracker);
+
+// Error tracking middleware (must be after routes)
+app.use(errorTracker);
 
 // REST endpoints
 app.post('/api/sessions/start',
@@ -219,33 +292,62 @@ async (req,res)=>{
   }catch(e){ return res.status(500).json({ error:'verify_failed' }); }
 });
 
-// --- Feature 5: Panic Button + Emergency Dispatch (email) ---
-function makeTransport(){
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, FROM_EMAIL } = process.env;
-  if(SMTP_HOST && SMTP_PORT && FROM_EMAIL){
-    return nodemailer.createTransport({ host: SMTP_HOST, port: parseInt(SMTP_PORT,10), secure: false,
-      auth: SMTP_USER? { user: SMTP_USER, pass: SMTP_PASS }: undefined });
-  }
-  return null;
-}
-
+// --- Feature 5: Real Emergency Alert System (Email + SMS) ---
 app.post('/api/emergency/trigger',
   body('sessionId').isString().isLength({ min:1, max:100 }),
   body('contacts').isArray({ min:1 }),
   body('message').optional().isString().isLength({ max: 500 }),
   body('location').optional().isObject(),
+  body('sitterName').optional().isString(),
+  body('parentName').optional().isString(),
   validate,
 async (req,res)=>{
-  const { sessionId, contacts, message, location } = req.body;
-  appendEvent(sessionId, 'panic_triggered', { message, location });
-  const t = makeTransport();
-  if(t){
-    const subj = `NannyRadar Emergency Alert for session ${sessionId}`;
-    const text = `Emergency reported.\nSession: ${sessionId}\nMessage: ${message||''}\nLocation: ${location? JSON.stringify(location): 'n/a'}`;
-    try{ await t.sendMail({ from: process.env.FROM_EMAIL, to: contacts.join(','), subject: subj, text }); }catch(_){ }
+  try {
+    const { sessionId, contacts, message, location, sitterName, parentName } = req.body;
+
+    // Log emergency event
+    appendEvent(sessionId, 'panic_triggered', { message, location, timestamp: new Date().toISOString() });
+
+    // Prepare alert data
+    const alertData = {
+      type: 'panic_button',
+      sessionId,
+      message: message || 'Emergency alert triggered',
+      location: location ? `${location.lat}, ${location.lng}` : 'Location unavailable',
+      timestamp: new Date().toISOString(),
+      sitterName: sitterName || 'Unknown',
+      parentName: parentName || 'Unknown'
+    };
+
+    // Send emergency emails
+    const emailContacts = contacts.filter(c => c.email).map(c => ({ email: c.email, name: c.name }));
+    if (emailContacts.length > 0) {
+      await emailService.sendEmergencyAlert(alertData, emailContacts);
+    }
+
+    // Send emergency SMS
+    const phoneContacts = contacts.filter(c => c.phone).map(c => c.phone);
+    if (phoneContacts.length > 0) {
+      await smsService.sendEmergencyAlert(phoneContacts, alertData);
+    }
+
+    // Track emergency alert in monitoring
+    monitoringService.trackSessionActivity(sessionId, 'emergency_alert', alertData);
+
+    // Broadcast to WebSocket clients
+    broadcast(sessionId, { type:'panic', sessionId, payload: alertData });
+
+    res.json({
+      ok: true,
+      alertId: nanoid(12),
+      emailsSent: emailContacts.length,
+      smsSent: phoneContacts.length,
+      timestamp: alertData.timestamp
+    });
+  } catch (error) {
+    console.error('Emergency alert failed:', error);
+    res.status(500).json({ error: 'emergency_alert_failed', message: error.message });
   }
-  broadcast(sessionId, { type:'panic', sessionId, payload:{ message, location } });
-  res.json({ ok:true });
 });
 
 // --- Feature 6: Auto-Invoice Generator ---
@@ -309,20 +411,30 @@ app.get('/api/sessions/:id/events', (req,res)=>{
   if(!s) return res.status(404).json({ error:'not_found' });
   res.json({ sessionId:id, events: Array.isArray(s.events)? s.events : [] });
 });
-// --- Feature 7: Tip Jar for Sitters ---
+// --- Feature 7: Real Tip Jar with Stripe ---
 app.post('/api/tips/process',
   body('sessionId').isString().isLength({ min:1, max:100 }),
   body('amount').isFloat({ min:1, max:500 }),
   body('sitterId').isString().isLength({ min:1, max:64 }),
   body('parentId').isString().isLength({ min:1, max:64 }),
+  body('paymentMethodId').isString().isLength({ min:1, max:100 }),
   validate,
 async (req,res)=>{
-  const { sessionId, amount, sitterId, parentId } = req.body;
-  // Mock Stripe processing (replace with real Stripe in production)
-  const tipId = nanoid(12);
-  const tip = { tipId, sessionId, amount, sitterId, parentId, status: 'completed', createdAt: Date.now() };
-  appendEvent(sessionId, 'tip_processed', tip);
-  res.json({ ok:true, tipId, status:'completed' });
+  try {
+    const { sessionId, amount, sitterId, parentId, paymentMethodId } = req.body;
+    // Process tip through Stripe
+    const tipResult = await stripeService.processTip(amount, paymentMethodId, parentId, {
+      sessionId,
+      sitterId,
+      type: 'tip'
+    });
+    const tipId = tipResult.id;
+    const tip = { tipId, sessionId, amount, sitterId, parentId, status: tipResult.status, createdAt: Date.now() };
+    appendEvent(sessionId, 'tip_processed', tip);
+    res.json({ ok:true, tipId, status: tipResult.status, amount: tipResult.amount });
+  } catch (error) {
+    res.status(400).json({ error: 'tip_processing_failed', message: error.message });
+  }
 });
 
 app.get('/api/sitters/:sitterId/tips',
@@ -377,36 +489,49 @@ app.post('/api/pricing/calculate',
   res.json({ baseRate, smartRate, factors, markup: smartRate - baseRate });
 });
 
-// --- Feature 10: Apple Pay & Cash App Pay Integration (Stripe) ---
+// --- Feature 10: Real Stripe Payment Integration ---
 app.post('/api/payments/create-intent',
   body('amount').isFloat({ min:1, max:1000 }),
   body('currency').optional().isIn(['usd','eur','gbp']),
-  body('paymentMethods').isArray(),
+  body('metadata').optional().isObject(),
   validate,
 async (req,res)=>{
-  const { amount, currency='usd', paymentMethods } = req.body;
-  // Mock Stripe PaymentIntent (replace with real Stripe in production)
-  const intentId = `pi_${nanoid(24)}`;
-  const clientSecret = `${intentId}_secret_${nanoid(16)}`;
-  res.json({
-    clientSecret,
-    intentId,
-    amount: Math.round(amount * 100), // cents
-    currency,
-    supportedMethods: paymentMethods.filter(m => ['card','apple_pay','cashapp'].includes(m))
-  });
+  try {
+    const { amount, currency='usd', metadata={} } = req.body;
+    const paymentIntent = await stripeService.createPaymentIntent(amount, currency, metadata);
+    monitoringService.trackPayment(true, amount, 'stripe');
+    res.json(paymentIntent);
+  } catch (error) {
+    monitoringService.trackPayment(false, req.body.amount, 'stripe', error.message);
+    res.status(400).json({ error: 'payment_intent_failed', message: error.message });
+  }
 });
 
 app.post('/api/payments/confirm',
   body('intentId').isString().isLength({ min:10, max:100 }),
-  body('method').isIn(['card','apple_pay','cashapp']),
+  body('paymentMethodId').optional().isString(),
   validate,
 async (req,res)=>{
-  const { intentId, method } = req.body;
-  // Mock payment confirmation
-  const paymentId = nanoid(16);
-  appendEvent(intentId, 'payment_confirmed', { paymentId, method });
-  res.json({ ok:true, paymentId, status:'succeeded', method });
+  try {
+    const { intentId, paymentMethodId } = req.body;
+    const result = await stripeService.confirmPaymentIntent(intentId, paymentMethodId);
+    appendEvent(intentId, 'payment_confirmed', result);
+    res.json({ ok:true, ...result });
+  } catch (error) {
+    res.status(400).json({ error: 'payment_confirmation_failed', message: error.message });
+  }
+});
+
+// Stripe webhook endpoint
+app.post('/api/stripe/webhook', async (req, res) => {
+  const signature = req.headers['stripe-signature'];
+  try {
+    await stripeService.handleWebhook(req.body, signature);
+    res.json({ received: true });
+  } catch (error) {
+    console.error('Webhook error:', error.message);
+    res.status(400).send(`Webhook Error: ${error.message}`);
+  }
 });
 // --- Feature 11: Availability Smart Scheduler ---
 const SITTER_AVAILABILITY = new Map(); // Mock availability storage
