@@ -74,6 +74,11 @@ const app = express();
 // Global rate limiter (mock-friendly but protective)
 app.use(rateLimit({ windowMs: 60*1000, max: 120, standardHeaders: true, legacyHeaders: false }));
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: Date.now(), features: 20, server: 'NannyRadar' });
+});
+
 function validate(req, res, next){
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ error:'bad_request', details: errors.array() });
