@@ -10,11 +10,16 @@ import {
   FlatList,
   Alert,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import type { RootStackParamList } from '../../navigation/types';
+import Button from '../../components/Button';
 
 const { width } = Dimensions.get('window');
 
@@ -33,15 +38,17 @@ interface Sitter {
 }
 
 const ParentBookScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'ParentBook'>>();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
+  const [selectedDateValue, setSelectedDateValue] = useState<Date | null>(null);
+  const [selectedTimeValue, setSelectedTimeValue] = useState<Date | null>(null);
   const [selectedDuration, setSelectedDuration] = useState(2);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [sitters, setSitters] = useState<Sitter[]>([]);
   const [filteredSitters, setFilteredSitters] = useState<Sitter[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [pickerMode, setPickerMode] = useState<'date' | 'time' | null>(null);
+  const [pickerTempValue, setPickerTempValue] = useState<Date>(new Date());
 
   // Mock data
   useEffect(() => {
@@ -92,12 +99,6 @@ const ParentBookScreen: React.FC = () => {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    const filtered = sitters.filter(sitter =>
-      sitter.name.toLowerCase().includes(query.toLowerCase()) ||
-      sitter.location.toLowerCase().includes(query.toLowerCase()) ||
-      sitter.skills.some(skill => skill.toLowerCase().includes(query.toLowerCase()))
-    );
-    setFilteredSitters(filtered);
   };
 
   const handleFilterToggle = (filter: string) => {
@@ -107,13 +108,94 @@ const ParentBookScreen: React.FC = () => {
     setSelectedFilters(updatedFilters);
   };
 
+  useEffect(() => {
+    const filtered = sitters.filter(sitter => {
+      const matchesQuery = !searchQuery ||
+        sitter.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        sitter.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        sitter.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesFilters = selectedFilters.length === 0 || selectedFilters.every(filter =>
+        filter === 'Verified'
+          ? sitter.verified
+          : sitter.skills.some(skill => skill.toLowerCase().includes(filter.toLowerCase()))
+      );
+
+      return matchesQuery && matchesFilters;
+    });
+
+    setFilteredSitters(filtered);
+  }, [searchQuery, selectedFilters, sitters]);
+
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+
+  const formatTime = (date: Date) =>
+    date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+
+  const formattedDate = selectedDateValue ? formatDate(selectedDateValue) : '';
+  const formattedTime = selectedTimeValue ? formatTime(selectedTimeValue) : '';
+
+  const openPicker = (mode: 'date' | 'time') => {
+    setPickerMode(mode);
+    const baseValue =
+      mode === 'date'
+        ? selectedDateValue ?? new Date()
+        : selectedTimeValue ?? selectedDateValue ?? new Date();
+    setPickerTempValue(baseValue);
+    setPickerVisible(true);
+  };
+
+  const closePicker = () => {
+    setPickerVisible(false);
+    setPickerMode(null);
+  };
+
+  const handlePickerChange = (_: any, nextValue?: Date) => {
+    if (nextValue) {
+      setPickerTempValue(nextValue);
+    }
+  };
+
+  const handlePickerConfirm = () => {
+    if (pickerMode === 'date') {
+      setSelectedDateValue(pickerTempValue);
+      if (!selectedTimeValue) {
+        setSelectedTimeValue(pickerTempValue);
+      }
+    } else if (pickerMode === 'time') {
+      setSelectedTimeValue(pickerTempValue);
+    }
+    closePicker();
+  };
+
   const handleBookSitter = (sitter: Sitter) => {
-    if (!selectedDate || !selectedTime) {
-      Alert.alert('Error', 'Please select date and time first');
+    if (!selectedDateValue || !selectedTimeValue) {
+      Alert.alert('Select Date & Time', 'Choose when you need care to continue booking.');
+      if (!selectedDateValue) {
+        openPicker('date');
+      } else {
+        openPicker('time');
+      }
       return;
     }
-    // TODO: Navigate to booking confirmation screen
-    Alert.alert('Booking', `Booking ${sitter.name} for ${selectedDate} at ${selectedTime}`);
+    const dateDisplay = formattedDate;
+    const timeDisplay = formattedTime;
+
+    navigation.navigate('BookingFlow', {
+      sitterId: sitter.id,
+      date: dateDisplay,
+      time: timeDisplay,
+    });
+
+    Alert.alert('Booking Created', `Booking ${sitter.name} for ${dateDisplay} at ${timeDisplay}`);
   };
 
   const renderSitterCard = ({ item }: { item: Sitter }) => (
@@ -211,17 +293,23 @@ const ParentBookScreen: React.FC = () => {
             <Text style={styles.sectionTitle}>When do you need care?</Text>
             
             <View style={styles.dateTimeRow}>
-              <TouchableOpacity style={styles.dateButton}>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => openPicker('date')}
+              >
                 <Ionicons name="calendar" size={20} color="#3A7DFF" />
                 <Text style={styles.dateButtonText}>
-                  {selectedDate || 'Select Date'}
+                  {formattedDate || 'Select Date'}
                 </Text>
               </TouchableOpacity>
               
-              <TouchableOpacity style={styles.timeButton}>
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={() => openPicker('time')}
+              >
                 <Ionicons name="time" size={20} color="#3A7DFF" />
                 <Text style={styles.timeButtonText}>
-                  {selectedTime || 'Select Time'}
+                  {formattedTime || 'Select Time'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -291,8 +379,47 @@ const ParentBookScreen: React.FC = () => {
               showsVerticalScrollIndicator={false}
             />
           </View>
+
+          <View style={styles.backButtonContainer}>
+            <Button
+              title="Back"
+              variant="outline"
+              size="medium"
+              onPress={() => navigation.goBack()}
+            />
+          </View>
         </ScrollView>
       </LinearGradient>
+      <Modal
+        transparent
+        visible={pickerVisible}
+        animationType="fade"
+        onRequestClose={closePicker}
+      >
+        <View style={styles.pickerOverlay}>
+          <View style={styles.pickerCard}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>
+                {pickerMode === 'time' ? 'Select Time' : 'Select Date'}
+              </Text>
+              <TouchableOpacity onPress={closePicker}>
+                <Ionicons name="close" size={22} color="#94A3B8" />
+              </TouchableOpacity>
+            </View>
+            {pickerMode && (
+              <DateTimePicker
+                value={pickerTempValue}
+                mode={pickerMode}
+                display="spinner"
+                onChange={handlePickerChange}
+              />
+            )}
+            <View style={styles.pickerActions}>
+              <Button title="Confirm" variant="primary" size="medium" onPress={handlePickerConfirm} />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -443,6 +570,35 @@ const styles = StyleSheet.create({
   filtersContainer: {
     paddingHorizontal: 20,
     paddingBottom: 20,
+  },
+  backButtonContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  pickerCard: {
+    backgroundColor: '#0F172A',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  pickerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#E2E8F0',
+  },
+  pickerActions: {
+    marginTop: 16,
   },
   filterTag: {
     backgroundColor: '#FFFFFF',

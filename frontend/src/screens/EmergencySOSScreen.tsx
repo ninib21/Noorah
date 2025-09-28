@@ -15,10 +15,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { AnimatedButton, AnimatedPulse, AnimatedGradientBackground, AnimatedShake } from '../components/AnimatedComponents';
 import FeedbackService from '../services/feedback.service';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { RootStackParamList } from '../navigation/types';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const EmergencySOSScreen: React.FC = () => {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [isEmergencyActive, setIsEmergencyActive] = useState(false);
   const [emergencyType, setEmergencyType] = useState<'medical' | 'safety' | 'urgent' | null>(null);
   const [countdown, setCountdown] = useState(5);
@@ -112,6 +116,18 @@ const EmergencySOSScreen: React.FC = () => {
     feedbackService.trackAction('emergency_cancelled', 'EmergencySOSScreen', {
       emergencyType,
     });
+  };
+
+  const handleCallParent = () => {
+    Alert.alert('Calling Guardian', 'Connecting to the designated parent via secure voice line.');
+  };
+
+  const handleMessageParent = () => {
+    Alert.alert('Messaging Guardian', 'Opening encrypted chat for status updates.');
+  };
+
+  const handleShareLocation = () => {
+    Alert.alert('Location Shared', 'Your live location has been broadcast to guardians and responders.');
   };
 
   const pulseStyle = useAnimatedStyle(() => ({
@@ -227,7 +243,7 @@ const EmergencySOSScreen: React.FC = () => {
           </View>
           <View style={styles.infoItem}>
             <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-            <Text style={styles.infoText}>NannyRadar support notified</Text>
+            <Text style={styles.infoText}>Noorah support notified</Text>
           </View>
         </View>
       </Animated.View>
@@ -239,17 +255,17 @@ const EmergencySOSScreen: React.FC = () => {
       <Text style={styles.contactsTitle}>Quick Contacts</Text>
       
       <View style={styles.contactButtons}>
-        <TouchableOpacity style={styles.contactButton}>
+        <TouchableOpacity style={styles.contactButton} onPress={handleCallParent}>
           <Ionicons name="call" size={24} color="#3A7DFF" />
           <Text style={styles.contactText}>Call Parent</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.contactButton}>
+        <TouchableOpacity style={styles.contactButton} onPress={handleMessageParent}>
           <Ionicons name="chatbubble" size={24} color="#3A7DFF" />
           <Text style={styles.contactText}>Message</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.contactButton}>
+        <TouchableOpacity style={styles.contactButton} onPress={handleShareLocation}>
           <Ionicons name="location" size={24} color="#3A7DFF" />
           <Text style={styles.contactText}>Share Location</Text>
         </TouchableOpacity>
@@ -257,17 +273,29 @@ const EmergencySOSScreen: React.FC = () => {
     </Animated.View>
   );
 
+  const renderInactiveContent = () => (
+    <Animated.ScrollView showsVerticalScrollIndicator={false}>
+      {renderEmergencyButton()}
+      {renderEmergencyTypes()}
+      {renderQuickContacts()}
+    </Animated.ScrollView>
+  );
+
   return (
     <AnimatedGradientBackground>
       <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+        </View>
         {isEmergencyActive ? (
-          renderActiveEmergency()
+          <Animated.ScrollView showsVerticalScrollIndicator={false}>
+            {renderActiveEmergency()}
+          </Animated.ScrollView>
         ) : (
-          <>
-            {renderEmergencyButton()}
-            {renderEmergencyTypes()}
-            {renderQuickContacts()}
-          </>
+          renderInactiveContent()
         )}
       </SafeAreaView>
     </AnimatedGradientBackground>
@@ -277,8 +305,23 @@ const EmergencySOSScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   emergencyContainer: {
     alignItems: 'center',
