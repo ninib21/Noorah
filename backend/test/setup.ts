@@ -1,54 +1,27 @@
+// Test setup file for Noorah backend
 import 'reflect-metadata';
 
+// Mock environment variables for testing
+process.env.NODE_ENV = 'test';
+process.env.DATABASE_URL = 'file:./test.db';
+process.env.JWT_SECRET = 'test_secret';
+process.env.STRIPE_SECRET_KEY = 'sk_test_mock';
+process.env.FRONTEND_URL = 'http://localhost:3000';
+
 // Global test setup
-beforeAll(() => {
-  // Set test environment
-  process.env.NODE_ENV = 'test';
-  process.env.JWT_SECRET = 'test-secret-key';
-  process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/nannyradar_test';
-  process.env.STRIPE_SECRET_KEY = 'sk_test_test';
+beforeAll(async () => {
+  // Setup test database or mock services
 });
 
-afterAll(() => {
-  // Cleanup
+afterAll(async () => {
+  // Cleanup after all tests
 });
 
-// Mock Stripe
-jest.mock('stripe', () => {
-  return jest.fn().mockImplementation(() => ({
-    paymentIntents: {
-      create: jest.fn().mockResolvedValue({
-        id: 'pi_test_123',
-        client_secret: 'pi_test_secret_123',
-        status: 'requires_payment_method',
-      }),
-      confirm: jest.fn().mockResolvedValue({
-        id: 'pi_test_123',
-        status: 'succeeded',
-      }),
-      retrieve: jest.fn().mockResolvedValue({
-        id: 'pi_test_123',
-        status: 'succeeded',
-        amount: 1000,
-      }),
-    },
-    refunds: {
-      create: jest.fn().mockResolvedValue({
-        id: 're_test_123',
-        status: 'succeeded',
-      }),
-    },
-    accounts: {
-      create: jest.fn().mockResolvedValue({
-        id: 'acct_test_123',
-        object: 'account',
-      }),
-    },
-  }));
+beforeEach(() => {
+  // Setup before each test
 });
 
-// Mock bcrypt
-jest.mock('bcryptjs', () => ({
-  hash: jest.fn().mockResolvedValue('hashedPassword'),
-  compare: jest.fn().mockResolvedValue(true),
-})); 
+afterEach(() => {
+  // Cleanup after each test
+});
+

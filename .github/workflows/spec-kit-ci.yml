@@ -1,0 +1,245 @@
+name: Spec-Kit CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Documentation and Spec Validation
+  docs-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install markdownlint
+        run: npm install -g markdownlint-cli
+
+      - name: Lint markdown files
+        run: |
+          markdownlint .spec-kit/spec/*.md
+          markdownlint .spec-kit/plan/*.md
+          markdownlint .spec-kit/prompts/*.md
+
+      - name: Validate YAML files
+        run: |
+          python3 -c "import yaml; yaml.safe_load(open('.spec-kit/plan/milestones.yaml'))"
+          python3 -c "import yaml; yaml.safe_load(open('.spec-kit/tasks/backlog.yaml'))"
+          python3 -c "import yaml; yaml.safe_load(open('.spec-kit/config.yaml'))"
+
+      - name: Validate spec-kit structure
+        run: node .spec-kit/tools/validate.js
+
+  # Backend Build and Test
+  backend-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run backend linting
+        working-directory: ./backend
+        run: npm run lint
+
+      - name: Run backend tests
+        working-directory: ./backend
+        run: npm test
+
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Check for security vulnerabilities
+        working-directory: ./backend
+        run: npm audit --audit-level=high
+
+  # Frontend Build and Test
+  frontend-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run frontend linting
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: npm test
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Check for security vulnerabilities
+        working-directory: ./frontend
+        run: npm audit --audit-level=high
+
+  # Integration Tests
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: [backend-ci, frontend-ci]
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nannyradar_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          cd backend && npm ci
+          cd ../frontend && npm ci
+
+      - name: Run database migrations
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nannyradar_test
+        run: npm run migration:run
+
+      - name: Run integration tests
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nannyradar_test
+          NODE_ENV: test
+        run: npm run test:e2e
+
+  # Security Scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Performance Testing
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: [backend-ci]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Start backend server
+        working-directory: ./backend
+        run: |
+          npm run build
+          npm start &
+          sleep 10
+
+      - name: Run performance tests
+        run: |
+          npm install -g artillery
+          artillery run .spec-kit/tests/performance.yml
+
+  # Deployment (only on main branch)
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [docs-validation, backend-ci, frontend-ci, integration-tests, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          # Add actual deployment commands here
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests on staging..."
+          # Add smoke test commands here
+
+      - name: Deploy to production
+        if: success()
+        run: |
+          echo "Deploying to production environment..."
+          # Add production deployment commands here
+
+  # Notification
+  notify:
+    runs-on: ubuntu-latest
+    needs: [docs-validation, backend-ci, frontend-ci, integration-tests, security-scan]
+    if: always()
+    steps:
+      - name: Notify on success
+        if: ${{ needs.docs-validation.result == 'success' && needs.backend-ci.result == 'success' && needs.frontend-ci.result == 'success' && needs.integration-tests.result == 'success' && needs.security-scan.result == 'success' }}
+        run: |
+          echo "✅ All CI checks passed successfully!"
+
+      - name: Notify on failure
+        if: ${{ needs.docs-validation.result == 'failure' || needs.backend-ci.result == 'failure' || needs.frontend-ci.result == 'failure' || needs.integration-tests.result == 'failure' || needs.security-scan.result == 'failure' }}
+        run: |
+          echo "❌ CI checks failed. Please review the logs."

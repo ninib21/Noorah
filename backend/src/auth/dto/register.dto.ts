@@ -44,11 +44,11 @@ export class RegisterDto {
 
   @ApiProperty({
     description: 'User type',
-    enum: UserType,
-    example: UserType.PARENT,
+    enum: ['parent', 'sitter', 'admin'],
+    example: 'parent',
   })
-  @IsEnum(UserType)
-  userType: UserType;
+  @IsString()
+  userType: string;
 
   @ApiProperty({
     description: 'Profile picture URL',

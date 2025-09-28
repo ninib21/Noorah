@@ -23,3 +23,4 @@ config.resolver.alias = {
 config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
 
 module.exports = config;
+

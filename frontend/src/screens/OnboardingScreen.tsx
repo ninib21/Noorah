@@ -6,12 +6,13 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { AnimatedGradientBackground } from '../components/AnimatedComponents';
+import { theme } from '../styles/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -21,7 +22,7 @@ interface OnboardingSlide {
   subtitle: string;
   description: string;
   icon: string;
-  color: string;
+  colors: readonly [string, string];
 }
 
 const onboardingData: OnboardingSlide[] = [
@@ -29,25 +30,28 @@ const onboardingData: OnboardingSlide[] = [
     id: 1,
     title: 'Find Trusted Sitters',
     subtitle: 'Safe & Reliable',
-    description: 'Connect with verified babysitters in your area. All sitters are background-checked and reviewed by other parents.',
+    description:
+      'Connect with verified babysitters nearby. Every sitter is quantum-screened and reviewed by real families.',
     icon: 'shield-checkmark',
-    color: '#3A7DFF',
+    colors: ['rgba(124, 58, 237, 0.6)', 'rgba(14, 165, 233, 0.6)'],
   },
   {
     id: 2,
     title: 'Real-Time Monitoring',
     subtitle: 'Peace of Mind',
-    description: 'Stay connected with live updates, GPS tracking, and instant messaging. Know your children are safe at all times.',
+    description:
+      'Live telemetry, smart alerts, and instant messaging keep you in the loop from orbit to bedtime.',
     icon: 'eye',
-    color: '#10B981',
+    colors: ['rgba(14, 165, 233, 0.6)', 'rgba(236, 72, 153, 0.6)'],
   },
   {
     id: 3,
     title: 'Secure Payments',
     subtitle: 'Easy & Safe',
-    description: 'Seamless payment processing with automatic tips and receipts. No cash needed, everything handled securely.',
+    description:
+      'Schedule, split, and tip with quantum-secure Stripe payments. Receipts and budgeting built-in.',
     icon: 'card',
-    color: '#FF7DB9',
+    colors: ['rgba(236, 72, 153, 0.6)', 'rgba(245, 158, 11, 0.6)'],
   },
 ];
 
@@ -78,12 +82,12 @@ const OnboardingScreen: React.FC = () => {
     setCurrentSlide(slideIndex);
   };
 
-  const renderSlide = (slide: OnboardingSlide, index: number) => (
-    <View key={slide.id} style={[styles.slide, { width }]}>
+  const renderSlide = (slide: OnboardingSlide) => (
+    <View key={slide.id} style={[styles.slide, { width }]}> 
       <View style={styles.slideContent}>
-        <View style={[styles.iconContainer, { backgroundColor: slide.color }]}>
-          <Ionicons name={slide.icon as any} size={64} color="#FFFFFF" />
-        </View>
+        <LinearGradient colors={slide.colors} style={styles.iconContainer}>
+          <Ionicons name={slide.icon as any} size={56} color={theme.colors.white} />
+        </LinearGradient>
 
         <Text style={styles.slideTitle}>{slide.title}</Text>
         <Text style={styles.slideSubtitle}>{slide.subtitle}</Text>
@@ -93,19 +97,14 @@ const OnboardingScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#3A7DFF', '#FF7DB9']}
-        style={styles.gradient}
-      >
-        {/* Header */}
+    <AnimatedGradientBackground colors={theme.colors.gradientAurora}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Slides */}
         <ScrollView
           ref={scrollViewRef}
           horizontal
@@ -118,36 +117,33 @@ const OnboardingScreen: React.FC = () => {
           {onboardingData.map(renderSlide)}
         </ScrollView>
 
-        {/* Footer */}
         <View style={styles.footer}>
-          {/* Pagination Dots */}
           <View style={styles.pagination}>
             {onboardingData.map((_, index) => (
               <View
-                key={index}
+                key={`dot-${index}`}
                 style={[
                   styles.dot,
                   {
-                    backgroundColor: index === currentSlide ? '#FFFFFF' : 'rgba(255, 255, 255, 0.3)',
+                    backgroundColor:
+                      index === currentSlide
+                        ? theme.colors.white
+                        : 'rgba(226, 232, 240, 0.35)',
                   },
                 ]}
               />
             ))}
           </View>
 
-          {/* Action Buttons */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={styles.nextButton}
-              onPress={handleNext}
-            >
+            <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
               <Text style={styles.nextButtonText}>
                 {currentSlide === onboardingData.length - 1 ? 'Get Started' : 'Next'}
               </Text>
               <Ionicons
                 name={currentSlide === onboardingData.length - 1 ? 'rocket' : 'arrow-forward'}
                 size={20}
-                color="#3A7DFF"
+                color={theme.colors.primaryDark}
                 style={styles.nextButtonIcon}
               />
             </TouchableOpacity>
@@ -160,32 +156,30 @@ const OnboardingScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </AnimatedGradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
+    paddingBottom: 24,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 24,
   },
   skipButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   skipText: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(226, 232, 240, 0.85)',
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
@@ -194,103 +188,87 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: 32,
   },
   slideContent: {
     alignItems: 'center',
-    maxWidth: 300,
+    maxWidth: 320,
   },
   iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
+    marginBottom: 36,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    ...theme.shadows.sm,
   },
   slideTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: 30,
+    fontWeight: '700',
+    color: theme.colors.white,
     textAlign: 'center',
-    marginBottom: 8,
   },
   slideSubtitle: {
-    fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
+    fontSize: 20,
+    color: 'rgba(226, 232, 240, 0.8)',
+    marginTop: 12,
     marginBottom: 16,
-    fontWeight: '600',
+    textAlign: 'center',
   },
   slideDescription: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(226, 232, 240, 0.75)',
     textAlign: 'center',
     lineHeight: 24,
   },
   footer: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingHorizontal: 24,
+    paddingBottom: 30,
   },
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 24,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginHorizontal: 6,
   },
   actionButtons: {
     alignItems: 'center',
   },
   nextButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: theme.colors.white,
     paddingVertical: 16,
-    paddingHorizontal: 32,
+    paddingHorizontal: 62,
+    borderRadius: 32,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    minWidth: 200,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   nextButtonText: {
-    color: '#3A7DFF',
+    color: theme.colors.primaryDark,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   nextButtonIcon: {
-    marginLeft: 8,
+    marginLeft: 12,
   },
   loginButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   loginButtonText: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 14,
+    color: 'rgba(226, 232, 240, 0.85)',
+    fontSize: 16,
     fontWeight: '500',
   },
 });
 
-export default OnboardingScreen; 
+export default OnboardingScreen;
+

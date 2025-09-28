@@ -116,7 +116,7 @@ const SignupScreen: React.FC = () => {
                 <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
               </TouchableOpacity>
               <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Join NannyRadar today</Text>
+              <Text style={styles.subtitle}>Join Noorah today</Text>
             </View>
 
             {/* Form */}
@@ -362,3 +362,4 @@ const styles = StyleSheet.create({
 });
 
 export default SignupScreen;
+

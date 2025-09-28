@@ -34,15 +34,13 @@ export class Message {
   id: string;
 
   @Column({
-    type: 'enum',
-    enum: MessageType,
+    type: 'varchar',
     default: MessageType.TEXT,
   })
   type: MessageType;
 
   @Column({
-    type: 'enum',
-    enum: MessageStatus,
+    type: 'varchar',
     default: MessageStatus.SENT,
   })
   status: MessageStatus;

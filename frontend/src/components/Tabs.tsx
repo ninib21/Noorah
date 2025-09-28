@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { theme } from '../styles/theme';
 
 interface Tab {
   key: string;
@@ -37,8 +38,8 @@ const Tabs: React.FC<TabsProps> = ({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
         flexDirection: 'row' as const,
       };
 
@@ -46,21 +47,23 @@ const Tabs: React.FC<TabsProps> = ({
         case 'pills':
           return {
             ...baseStyle,
-            backgroundColor: isActive ? '#3A7DFF' : 'transparent',
+            backgroundColor: isActive ? 'rgba(124, 58, 237, 0.25)' : 'transparent',
             borderWidth: 1,
-            borderColor: isActive ? '#3A7DFF' : '#E2E8F0',
+            borderColor: isActive ? 'rgba(124, 58, 237, 0.6)' : 'rgba(148, 163, 184, 0.25)',
           };
         case 'underline':
           return {
             ...baseStyle,
             borderBottomWidth: 2,
-            borderBottomColor: isActive ? '#3A7DFF' : 'transparent',
+            borderBottomColor: isActive ? theme.colors.accent : 'transparent',
             borderRadius: 0,
           };
         default:
           return {
             ...baseStyle,
-            backgroundColor: isActive ? '#F1F5F9' : 'transparent',
+            backgroundColor: isActive ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+            borderWidth: isActive ? 1 : 0,
+            borderColor: isActive ? 'rgba(148, 163, 184, 0.25)' : 'transparent',
           };
       }
     };
@@ -75,12 +78,12 @@ const Tabs: React.FC<TabsProps> = ({
         case 'pills':
           return {
             ...baseStyle,
-            color: isActive ? '#FFFFFF' : '#64748B',
+            color: isActive ? theme.colors.white : theme.colors.textSecondary,
           };
         default:
           return {
             ...baseStyle,
-            color: isActive ? '#3A7DFF' : '#64748B',
+            color: isActive ? theme.colors.primary : theme.colors.textSecondary,
           };
       }
     };
@@ -128,9 +131,11 @@ const Tabs: React.FC<TabsProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    borderRadius: theme.borderRadius.lg,
     padding: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.18)',
   },
   scrollableContainer: {
     paddingHorizontal: 16,
@@ -139,7 +144,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   badge: {
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.colors.error,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -149,13 +154,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   activeBadge: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.white,
   },
   badgeText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: theme.colors.background,
   },
 });
 
 export default Tabs; 
+

@@ -14,7 +14,7 @@ export class LoggingService implements LoggerService {
         winston.format.errors({ stack: true }),
         winston.format.json(),
       ),
-      defaultMeta: { service: 'nannyradar-api' },
+      defaultMeta: { service: 'Noorah-api' },
       transports: [
         // Console transport
         new winston.transports.Console({

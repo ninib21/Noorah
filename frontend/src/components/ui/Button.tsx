@@ -1,17 +1,58 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+  ActivityIndicator,
+  View,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../styles/theme';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
+  loading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
+
+const gradientByVariant = {
+  primary: theme.colors.gradientAurora,
+  secondary: theme.colors.gradientNebula,
+} as const;
+
+const sizeStyles = {
+  small: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    minHeight: 40,
+  },
+  medium: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    minHeight: 52,
+  },
+  large: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.lg,
+    minHeight: 62,
+  },
+} as const;
+
+const textSizeStyles = {
+  small: { fontSize: theme.typography.fontSize.sm },
+  medium: { fontSize: theme.typography.fontSize.base },
+  large: { fontSize: theme.typography.fontSize.lg },
+} as const;
 
 export const Button: React.FC<ButtonProps> = ({
   title,
@@ -19,110 +60,142 @@ export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'medium',
   disabled = false,
+  loading = false,
   style,
   textStyle,
   icon,
+  accessibilityHint,
+  accessibilityLabel,
 }) => {
-  const buttonStyle = [
-    styles.base,
-    styles[variant],
-    styles[size],
-    disabled && styles.disabled,
-    style,
-  ];
+  const isGradient = variant === 'primary' || variant === 'secondary';
 
-  const textStyleCombined = [
-    styles.text,
-    styles[`${variant}Text`],
-    styles[`${size}Text`],
-    disabled && styles.disabledText,
-    textStyle,
-  ];
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <ActivityIndicator
+          size="small"
+          color={variant === 'outline' || variant === 'ghost' ? theme.colors.primary : theme.colors.white}
+        />
+      );
+    }
+
+    return (
+      <View style={styles.content}>
+        {icon && <View style={styles.icon}>{icon}</View>}
+        <Text
+          style={[
+            styles.textBase,
+            textSizeStyles[size],
+            variant === 'outline' || variant === 'ghost'
+              ? styles.textOutline
+              : styles.textFilled,
+            textStyle,
+          ]}
+        >
+          {title}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <TouchableOpacity
-      style={buttonStyle}
+      style={[styles.touchable, style, disabled && styles.touchableDisabled]}
       onPress={onPress}
-      disabled={disabled}
-      activeOpacity={0.8}
+      disabled={disabled || loading}
+      activeOpacity={0.85}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
     >
-      {icon && icon}
-      <Text style={textStyleCombined}>{title}</Text>
+      {isGradient ? (
+        <LinearGradient
+          colors={
+            variant === 'primary'
+              ? gradientByVariant.primary
+              : gradientByVariant.secondary
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            styles.gradientButton,
+            sizeStyles[size],
+            disabled && styles.gradientDisabled,
+          ]}
+        >
+          {renderContent()}
+        </LinearGradient>
+      ) : (
+        <View
+          style={[
+            styles.solidButton,
+            sizeStyles[size],
+            variant === 'outline' ? styles.outline : styles.ghost,
+            disabled && styles.solidDisabled,
+          ]}
+        >
+          {renderContent()}
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  base: {
+  touchable: {
+    borderRadius: theme.borderRadius.xl,
+    overflow: 'hidden',
+  },
+  touchableDisabled: {
+    opacity: 0.6,
+  },
+  gradientButton: {
     borderRadius: theme.borderRadius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
-    ...theme.shadows.sm,
+    ...theme.shadows.glow,
   },
-  
-  // Variants
-  primary: {
-    backgroundColor: theme.colors.primary,
+  gradientDisabled: {
+    opacity: 0.7,
   },
-  secondary: {
-    backgroundColor: theme.colors.secondary,
+  solidButton: {
+    borderRadius: theme.borderRadius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(148, 163, 184, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.35)',
   },
   outline: {
     backgroundColor: 'transparent',
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: theme.colors.primary,
   },
-  
-  // Sizes
-  small: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    minHeight: 36,
+  ghost: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
-  medium: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    minHeight: 48,
+  solidDisabled: {
+    opacity: 0.65,
   },
-  large: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.lg,
-    minHeight: 56,
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  
-  // Text styles
-  text: {
-    fontFamily: theme.typography.fontFamily.primary,
+  icon: {
+    marginRight: 8,
+  },
+  textBase: {
+    fontFamily: theme.typography.fontFamily.secondary,
     fontWeight: theme.typography.fontWeight.semibold,
     textAlign: 'center',
+    letterSpacing: 0.4,
   },
-  primaryText: {
+  textFilled: {
     color: theme.colors.white,
   },
-  secondaryText: {
-    color: theme.colors.white,
-  },
-  outlineText: {
+  textOutline: {
     color: theme.colors.primary,
   },
-  
-  // Size text
-  smallText: {
-    fontSize: theme.typography.fontSize.sm,
-  },
-  mediumText: {
-    fontSize: theme.typography.fontSize.base,
-  },
-  largeText: {
-    fontSize: theme.typography.fontSize.lg,
-  },
-  
-  // Disabled states
-  disabled: {
-    opacity: 0.5,
-  },
-  disabledText: {
-    opacity: 0.7,
-  },
 });
+

@@ -1,52 +1,57 @@
-// NannyRadar App Theme Configuration
+// Noorah App Theme Configuration (Aurora Neon Edition)
 export const theme = {
   colors: {
-    // Primary Colors
-    primary: '#FF69B4',        // Hot Pink
-    primaryLight: '#FFB6C1',   // Light Pink
-    primaryDark: '#C71585',    // Medium Violet Red
-    
-    // Secondary Colors
-    secondary: '#87CEEB',      // Sky Blue
-    secondaryLight: '#B0E0E6', // Powder Blue
-    secondaryDark: '#4682B4',  // Steel Blue
-    
-    // Neutral Colors
-    white: '#FFFFFF',
-    background: '#FAFAFA',     // Off White
-    surface: '#FFFFFF',
-    
-    // Text Colors
-    textPrimary: '#2C3E50',    // Dark Blue Gray
-    textSecondary: '#7F8C8D',  // Medium Gray
-    textLight: '#BDC3C7',      // Light Gray
-    
-    // Status Colors
-    success: '#2ECC71',        // Green
-    warning: '#F39C12',        // Orange
-    error: '#E74C3C',          // Red
-    info: '#3498DB',           // Blue
-    
-    // Gradient Colors
-    gradientPink: ['#FF69B4', '#FFB6C1'],
-    gradientBlue: ['#87CEEB', '#B0E0E6'],
-    gradientMixed: ['#FF69B4', '#87CEEB'],
+    // Core palette
+    primary: '#7C3AED',
+    primaryLight: '#A855F7',
+    primaryDark: '#312E81',
+
+    secondary: '#0EA5E9',
+    secondaryLight: '#38BDF8',
+    secondaryDark: '#075985',
+
+    accent: '#F472B6',
+    accentAlt: '#F59E0B',
+
+    white: '#F8FAFC',
+    background: '#080524',
+    backgroundAlt: '#0F172A',
+    surface: 'rgba(15, 23, 42, 0.75)',
+    surfaceSolid: '#111827',
+
+    textPrimary: '#E2E8F0',
+    textSecondary: '#94A3B8',
+    textMuted: '#64748B',
+
+    success: '#22D3EE',
+    warning: '#F59E0B',
+    error: '#F87171',
+    info: '#38BDF8',
+
+    // Gradients
+    gradientAurora: ['#312E81', '#7C3AED', '#EC4899'],
+    gradientNebula: ['#0EA5E9', '#22D3EE', '#A855F7'],
+    gradientSolar: ['#F59E0B', '#FB7185'],
+    gradientMidnight: ['#0B1120', '#1E1B4B'],
+    gradientGlass: ['rgba(148, 163, 184, 0.08)', 'rgba(148, 163, 184, 0.02)'],
   },
-  
+
   typography: {
     fontFamily: {
       primary: 'Nunito',
       secondary: 'Poppins',
+      display: 'Poppins',
     },
     fontSize: {
       xs: 12,
       sm: 14,
       base: 16,
       lg: 18,
-      xl: 20,
-      '2xl': 24,
-      '3xl': 30,
-      '4xl': 36,
+      xl: 22,
+      '2xl': 26,
+      '3xl': 34,
+      '4xl': 44,
+      display: 52,
     },
     fontWeight: {
       light: '300',
@@ -55,9 +60,10 @@ export const theme = {
       semibold: '600',
       bold: '700',
       extrabold: '800',
+      black: '900',
     },
   },
-  
+
   spacing: {
     xs: 4,
     sm: 8,
@@ -67,44 +73,61 @@ export const theme = {
     '2xl': 48,
     '3xl': 64,
   },
-  
+
   borderRadius: {
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 20,
+    sm: 10,
+    md: 16,
+    lg: 24,
+    xl: 32,
     full: 9999,
   },
-  
+
   shadows: {
     sm: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 2,
+      shadowColor: 'rgba(124, 58, 237, 0.4)',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 12,
+      elevation: 6,
     },
     md: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowColor: 'rgba(14, 165, 233, 0.35)',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.4,
+      shadowRadius: 20,
+      elevation: 10,
     },
-    lg: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.2,
-      shadowRadius: 16,
-      elevation: 8,
+    glow: {
+      shadowColor: 'rgba(236, 72, 153, 0.7)',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.7,
+      shadowRadius: 30,
+      elevation: 12,
     },
   },
-  
+
+  effects: {
+    glassCard: {
+      backgroundColor: 'rgba(15, 23, 42, 0.65)',
+      borderWidth: 1,
+      borderColor: 'rgba(148, 163, 184, 0.2)',
+    },
+    neonBorder: {
+      borderWidth: 1,
+      borderColor: 'rgba(124, 58, 237, 0.6)',
+      shadowColor: 'rgba(124, 58, 237, 0.6)',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.8,
+      shadowRadius: 18,
+    },
+  },
+
   animations: {
     duration: {
-      fast: 200,
-      normal: 300,
-      slow: 500,
+      fast: 180,
+      normal: 320,
+      slow: 560,
+      ultra: 900,
     },
     easing: {
       easeInOut: 'ease-in-out',
@@ -112,4 +135,5 @@ export const theme = {
       spring: 'spring',
     },
   },
-};
+} as const;
+

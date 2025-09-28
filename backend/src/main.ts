@@ -1,101 +1,41 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import helmet from 'helmet';
-import compression from 'compression';
-// import rateLimit from 'express-rate-limit';
-// import slowDown from 'express-slow-down';
 import { AppModule } from './app.module';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const logger = new Logger('Bootstrap');
-
-  // Security middleware
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'"],
-        fontSrc: ["'self'"],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
-        frameSrc: ["'none'"],
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-    hsts: {
-      maxAge: 31536000,
-      includeSubDomains: true,
-      preload: true
-    }
-  }));
-
-  app.use(compression());
-
-  // Rate limiting configuration (implemented in SecurityGuard)
-  // Note: Rate limiting is now handled by SecurityGuard and SecurityMiddleware
-  // for better integration with NestJS architecture
-
-  // Enable CORS with proper configuration
-  app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:19006',
-      'http://localhost:8081',
-      process.env.FRONTEND_URL,
-    ].filter(Boolean),
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
-
-  // Global validation pipe with enhanced configuration
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-      errorHttpStatusCode: 422,
-    }),
-  );
-
-  // Global prefix
-  app.setGlobalPrefix('api/v1');
-
-  // Swagger documentation setup
-  const config = new DocumentBuilder()
-    .setTitle('NannyRadar API')
-    .setDescription('The NannyRadar babysitting app API')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .addTag('auth', 'Authentication endpoints')
-    .addTag('users', 'User management')
-    .addTag('bookings', 'Booking system')
-    .addTag('payments', 'Payment processing')
-    .addTag('sitters', 'Sitter management')
-    .addTag('reviews', 'Review system')
-    .addTag('ai', 'AI features')
-    .build();
-  
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
-
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
-  
-  logger.log(`🚀 NannyRadar API is running on: http://localhost:${port}`);
-  logger.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
-  logger.log(`🔍 Health Check: http://localhost:${port}/api/v1/health`);
+function isAllowed(origin?: string) {
+  if (!origin) return true; // curl/postman
+  const allow = [
+    /^http:\/\/localhost(?::\d+)?$/,
+    /^http:\/\/127\.0\.0\.1(?::\d+)?$/,
+    /^http:\/\/192\.168\.\d+\.\d+(?::\d+)?$/, // local LAN
+    'null', // file:// origin
+  ];
+  return allow.some(a => (a instanceof RegExp ? a.test(origin) : a === origin));
 }
 
-bootstrap().catch((error) => {
-  console.error('Failed to start application:', error);
-  process.exit(1);
-}); 
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  app.enableCors({
+    origin: (origin, cb) => (isAllowed(origin) ? cb(null, true) : cb(new Error(`CORS blocked: ${origin}`))),
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization',
+    credentials: false,
+    maxAge: 86400,
+  });
+
+  app.setGlobalPrefix('api/v1');
+
+  // Built-in health endpoints (no controllers needed)
+  const express = app.getHttpAdapter().getInstance();
+  express.get('/', (_req: any, res: any) => res.json({ ok: true, service: 'Noorah-backend' }));
+  express.get('/health', (_req: any, res: any) => res.json({ ok: true, status: 'healthy' }));
+  express.get('/api/v1/health', (_req: any, res: any) =>
+    res.json({ ok: true, status: 'healthy', scope: 'api/v1' })
+  );
+
+  const port = Number(process.env.PORT ?? 3001);
+  await app.listen(port, '0.0.0.0');
+  console.log(`✅ Backend listening on http://localhost:${port}`);
+}
+bootstrap(); 
+

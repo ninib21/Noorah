@@ -242,7 +242,7 @@ class MFAService {
    * Generate QR code URL for authenticator apps
    */
   private generateQRCode(secret: string, userEmail: string): string {
-    const issuer = 'NannyRadar';
+    const issuer = 'Noorah';
     const account = userEmail;
     const url = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=${this.TOTP_DIGITS}&period=${this.TOTP_PERIOD}`;
     return url;

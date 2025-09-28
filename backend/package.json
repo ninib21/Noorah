@@ -1,7 +1,7 @@
 {
-  "name": "nannyradar-backend",
+  "name": "Noorah-backend",
   "version": "1.0.0",
-  "description": "NannyRadar Backend API",
+  "description": "Noorah Backend API",
   "main": "dist/main.js",
   "scripts": {
     "build": "nest build",
@@ -15,7 +15,14 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "db:setup": "node scripts/setup-postgresql.js",
+    "db:docker": "docker-compose -f docker-compose.postgres.yml up -d",
+    "db:docker:down": "docker-compose -f docker-compose.postgres.yml down",
+    "db:migrate": "npm run typeorm -- migration:run",
+    "db:migrate:generate": "npm run typeorm -- migration:generate",
+    "db:migrate:revert": "npm run typeorm -- migration:revert",
+    "typeorm": "typeorm-ts-node-commonjs"
   },
   "keywords": [
     "nestjs",
@@ -38,9 +45,16 @@
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/typeorm": "^11.0.0",
     "@nestjs/websockets": "^11.1.5",
+    "@noble/ciphers": "^2.0.0",
+    "@noble/ed25519": "^3.0.0",
+    "@noble/hashes": "^2.0.0",
+    "@noble/secp256k1": "^3.0.0",
+    "@types/aws-sdk": "^0.0.42",
     "@types/bull": "^3.15.9",
+    "@types/libsodium-wrappers": "^0.7.14",
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^6.4.17",
+    "@types/pg": "^8.15.5",
     "aws-sdk": "^2.1692.0",
     "bcryptjs": "^3.0.2",
     "bull": "^4.16.5",
@@ -50,6 +64,7 @@
     "express-rate-limit": "^8.0.1",
     "firebase-admin": "^13.4.0",
     "helmet": "^8.1.0",
+    "libsodium-wrappers": "^0.7.15",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
     "passport": "^0.7.0",
@@ -59,9 +74,11 @@
     "redis": "^4.7.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "sharp": "^0.34.3",
+    "sharp": "^0.34.4",
     "sqlite3": "^5.1.7",
     "stripe": "^18.4.0",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1",
     "twilio": "^5.8.0",
     "typeorm": "^0.3.25",
     "winston": "^3.17.0",
@@ -77,7 +94,11 @@
     "@types/passport-jwt": "^4.0.1",
     "jest": "^29.5.0",
     "nodemon": "^3.1.10",
+    "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "webpack": "^5.100.2",
+    "webpack-cli": "^6.0.1"
   }
 }
+

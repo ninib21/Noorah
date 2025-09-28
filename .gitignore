@@ -120,4 +120,30 @@ docker-compose.override.yml
 
 # Backup files
 *.bak
-*.backup 
+*.backup
+
+# Project specific
+legacy/
+tools/
+web/
+static/
+
+# IDE specific
+*.sublime-project
+*.sublime-workspace
+
+# MacOS
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*

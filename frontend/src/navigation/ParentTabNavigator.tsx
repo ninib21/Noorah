@@ -6,6 +6,7 @@ import ParentBookScreen from '../screens/parent/ParentBookScreen';
 import ParentMySittersScreen from '../screens/parent/ParentMySittersScreen';
 import ParentMessagesScreen from '../screens/parent/ParentMessagesScreen';
 import ParentProfileScreen from '../screens/parent/ParentProfileScreen';
+import { theme } from '../styles/theme';
 
 const Tab = createBottomTabNavigator();
 
@@ -32,19 +33,19 @@ const ParentTabNavigator: React.FC = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#3A7DFF',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: theme.colors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#E2E8F0',
+          borderTopColor: 'rgba(148, 163, 184, 0.14)',
           paddingBottom: 8,
           paddingTop: 8,
           height: 60,
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '500',
+          fontWeight: theme.typography.fontWeight.medium,
         },
         headerShown: false,
       })}
@@ -79,3 +80,4 @@ const ParentTabNavigator: React.FC = () => {
 };
 
 export default ParentTabNavigator; 
+

@@ -408,7 +408,7 @@ export class EmergencySOSService {
   /**
    * Check if emergency is active
    */
-  static isEmergencyActive(): boolean {
+  static getIsEmergencyActive(): boolean {
     return this.isEmergencyActive;
   }
 

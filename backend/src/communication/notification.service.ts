@@ -80,15 +80,15 @@ export class NotificationService {
   private generateSmsMessage(type: string, data: any): string {
     switch (type) {
       case 'booking':
-        return `Booking confirmed! Sitter: ${data.sitterName}, Date: ${data.date}, Time: ${data.time}. NannyRadar`;
+        return `Booking confirmed! Sitter: ${data.sitterName}, Date: ${data.date}, Time: ${data.time}. Noorah`;
       case 'emergency':
-        return `EMERGENCY ALERT: ${data.type} at ${data.location}. NannyRadar support team has been notified.`;
+        return `EMERGENCY ALERT: ${data.type} at ${data.location}. Noorah support team has been notified.`;
       case 'payment':
-        return `Payment ${data.status}: $${data.amount} for booking on ${data.date}. NannyRadar`;
+        return `Payment ${data.status}: $${data.amount} for booking on ${data.date}. Noorah`;
       case 'reminder':
-        return `Reminder: Your booking with ${data.sitterName} is in ${data.timeUntil} minutes. NannyRadar`;
+        return `Reminder: Your booking with ${data.sitterName} is in ${data.timeUntil} minutes. Noorah`;
       default:
-        return `NannyRadar notification: ${data.message}`;
+        return `Noorah notification: ${data.message}`;
     }
   }
 } 

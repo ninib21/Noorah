@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   Image,
   Switch,
+  Modal,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,6 +23,20 @@ const ParentProfileScreen: React.FC = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [guardianModeEnabled, setGuardianModeEnabled] = useState(true);
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [draftChildName, setDraftChildName] = useState('');
+  const [draftChildAge, setDraftChildAge] = useState('');
+  const [draftContactName, setDraftContactName] = useState('');
+  const [draftContactPhone, setDraftContactPhone] = useState('');
+
+  const createToggleHandler = (setter: (value: boolean) => void, label: string) => (value: boolean) => {
+    setter(value);
+    Alert.alert(label, value ? `${label} enabled.` : `${label} disabled.`);
+  };
+
+  const handleNotificationsToggle = createToggleHandler(setNotificationsEnabled, 'Notifications');
+  const handleLocationToggle = createToggleHandler(setLocationEnabled, 'Location sharing');
+  const handleGuardianToggle = createToggleHandler(setGuardianModeEnabled, 'Guardian mode');
 
   // Mock data
   const profileData = {
@@ -38,41 +55,151 @@ const ParentProfileScreen: React.FC = () => {
     ],
   };
 
+  const modalTitles: Record<string, string> = {
+    personal: 'Personal Information',
+    children: 'Children',
+    emergency: 'Emergency Contacts',
+    payments: 'Payment Methods',
+    'booking-history': 'Booking History',
+    'add-child': 'Add Child',
+    'add-contact': 'Add Emergency Contact',
+  };
+
+  const openModal = (id: string) => {
+    setActiveModal(id);
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+    setDraftChildName('');
+    setDraftChildAge('');
+    setDraftContactName('');
+    setDraftContactPhone('');
+  };
+
+  const handleSaveModal = () => {
+    if (!activeModal) return;
+    switch (activeModal) {
+      case 'add-child':
+        Alert.alert('Child Added', `${draftChildName || 'New child'} has been queued for profile onboarding.`);
+        break;
+      case 'add-contact':
+        Alert.alert('Emergency Contact Added', `${draftContactName || 'New contact'} has been queued for verification.`);
+        break;
+      default:
+        Alert.alert('Updates Saved', `${modalTitles[activeModal]} changes have been recorded.`);
+    }
+    closeModal();
+  };
+
+  const renderModalContent = () => {
+    switch (activeModal) {
+      case 'personal':
+        return (
+          <Text style={styles.modalBodyText}>
+            Profile editing and verification will arrive soon. For now, contact support@noorah.io to update personal details.
+          </Text>
+        );
+      case 'children':
+        return (
+          <Text style={styles.modalBodyText}>
+            Manage your children’s profiles to tailor sitter recommendations and wellness monitoring.
+          </Text>
+        );
+      case 'emergency':
+        return (
+          <Text style={styles.modalBodyText}>
+            Emergency contacts receive real-time alerts when Guardian Mode detects issues.
+          </Text>
+        );
+      case 'payments':
+        return (
+          <Text style={styles.modalBodyText}>
+            Secure card vaulting and instant payouts are powered by Noorah Vault. Add or update payment sources in the next release.
+          </Text>
+        );
+      case 'booking-history':
+        return (
+          <Text style={styles.modalBodyText}>
+            Booking analytics and downloadable invoices will appear here. The Quantum ledger is syncing your past sessions.
+          </Text>
+        );
+      case 'add-child':
+        return (
+          <View style={styles.modalForm}>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Child name"
+              value={draftChildName}
+              onChangeText={setDraftChildName}
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Age"
+              keyboardType="numeric"
+              value={draftChildAge}
+              onChangeText={setDraftChildAge}
+            />
+          </View>
+        );
+      case 'add-contact':
+        return (
+          <View style={styles.modalForm}>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Contact name"
+              value={draftContactName}
+              onChangeText={setDraftContactName}
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Phone"
+              keyboardType="phone-pad"
+              value={draftContactPhone}
+              onChangeText={setDraftContactPhone}
+            />
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
   const menuItems = [
     {
       id: '1',
       title: 'Personal Information',
       icon: 'person',
       color: '#3A7DFF',
-      onPress: () => {},
+      onPress: () => openModal('personal'),
     },
     {
       id: '2',
       title: 'Children',
       icon: 'people',
       color: '#FF7DB9',
-      onPress: () => {},
+      onPress: () => openModal('children'),
     },
     {
       id: '3',
       title: 'Emergency Contacts',
       icon: 'call',
       color: '#EF4444',
-      onPress: () => {},
+      onPress: () => openModal('emergency'),
     },
     {
       id: '4',
       title: 'Payment Methods',
       icon: 'card',
       color: '#10B981',
-      onPress: () => {},
+      onPress: () => openModal('payments'),
     },
     {
       id: '5',
       title: 'Booking History',
       icon: 'time',
       color: '#F59E0B',
-      onPress: () => {},
+      onPress: () => openModal('booking-history'),
     },
     {
       id: '6',
@@ -142,10 +269,10 @@ const ParentProfileScreen: React.FC = () => {
                   </TouchableOpacity>
                 </Card>
               ))}
-              <TouchableOpacity style={styles.addChildButton}>
-                <Ionicons name="add" size={24} color="#3A7DFF" />
-                <Text style={styles.addChildText}>Add Child</Text>
-              </TouchableOpacity>
+      <TouchableOpacity style={styles.addChildButton} onPress={() => openModal('add-child')}>
+        <Ionicons name="add" size={24} color="#3A7DFF" />
+        <Text style={styles.addChildText}>Add Child</Text>
+      </TouchableOpacity>
             </View>
           </View>
 
@@ -160,7 +287,7 @@ const ParentProfileScreen: React.FC = () => {
                 </View>
                 <Switch
                   value={notificationsEnabled}
-                  onValueChange={setNotificationsEnabled}
+                  onValueChange={handleNotificationsToggle}
                   trackColor={{ false: '#E2E8F0', true: '#3A7DFF' }}
                   thumbColor="#FFFFFF"
                 />
@@ -172,7 +299,7 @@ const ParentProfileScreen: React.FC = () => {
                 </View>
                 <Switch
                   value={locationEnabled}
-                  onValueChange={setLocationEnabled}
+                  onValueChange={handleLocationToggle}
                   trackColor={{ false: '#E2E8F0', true: '#3A7DFF' }}
                   thumbColor="#FFFFFF"
                 />
@@ -184,7 +311,7 @@ const ParentProfileScreen: React.FC = () => {
                 </View>
                 <Switch
                   value={guardianModeEnabled}
-                  onValueChange={setGuardianModeEnabled}
+                  onValueChange={handleGuardianToggle}
                   trackColor={{ false: '#E2E8F0', true: '#3A7DFF' }}
                   thumbColor="#FFFFFF"
                 />
@@ -216,7 +343,7 @@ const ParentProfileScreen: React.FC = () => {
                   </TouchableOpacity>
                 </View>
               ))}
-              <TouchableOpacity style={styles.addContactButton}>
+              <TouchableOpacity style={styles.addContactButton} onPress={() => openModal('add-contact')}>
                 <Ionicons name="add" size={20} color="#3A7DFF" />
                 <Text style={styles.addContactText}>Add Emergency Contact</Text>
               </TouchableOpacity>
@@ -232,6 +359,36 @@ const ParentProfileScreen: React.FC = () => {
             />
           </View>
         </ScrollView>
+        <Modal
+          visible={!!activeModal}
+          transparent
+          animationType="slide"
+          onRequestClose={closeModal}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {activeModal ? modalTitles[activeModal] : ''}
+                </Text>
+                <TouchableOpacity onPress={closeModal}>
+                  <Ionicons name="close" size={22} color="#94A3B8" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.modalContent}>{renderModalContent()}</View>
+
+              <View style={styles.modalActions}>
+                <View style={[styles.modalActionButton, styles.modalActionButtonFirst]}>
+                  <Button title="Cancel" variant="outline" size="small" onPress={closeModal} />
+                </View>
+                <View style={styles.modalActionButton}>
+                  <Button title="Save" variant="primary" size="small" onPress={handleSaveModal} />
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </LinearGradient>
     </SafeAreaView>
   );
@@ -441,6 +598,59 @@ const styles = StyleSheet.create({
     color: '#3A7DFF',
     marginLeft: 8,
     fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    backgroundColor: '#0F172A',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#E2E8F0',
+  },
+  modalContent: {
+    marginBottom: 20,
+  },
+  modalBodyText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#CBD5F5',
+  },
+  modalForm: {
+    marginTop: 4,
+  },
+  modalInput: {
+    backgroundColor: '#1F2937',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: '#E2E8F0',
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 12,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  modalActionButton: {
+    marginLeft: 12,
+  },
+  modalActionButtonFirst: {
+    marginLeft: 0,
   },
 });
 

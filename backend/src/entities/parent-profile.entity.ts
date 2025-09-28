@@ -31,15 +31,13 @@ export class ParentProfile {
   bio: string;
 
   @Column({
-    type: 'enum',
-    enum: FamilySize,
+    type: 'varchar',
     default: FamilySize.SMALL,
   })
   familySize: FamilySize;
 
   @Column({
-    type: 'enum',
-    enum: IncomeLevel,
+    type: 'varchar',
     default: IncomeLevel.MIDDLE,
   })
   incomeLevel: IncomeLevel;

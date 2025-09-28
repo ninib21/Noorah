@@ -37,7 +37,7 @@ export class SecureBaseDto {
  * Enhanced Authentication DTOs
  */
 export class SecureLoginDto extends SecureBaseDto {
-  @ApiProperty({ example: 'user@nannyradar.com' })
+  @ApiProperty({ example: 'user@Noorah.com' })
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsNotEmpty({ message: 'Email is required' })
   @MaxLength(255, { message: 'Email must not exceed 255 characters' })
@@ -79,7 +79,7 @@ export class SecureRegisterDto extends SecureBaseDto {
   @Transform(({ value }) => value?.trim())
   lastName: string;
 
-  @ApiProperty({ example: 'user@nannyradar.com' })
+  @ApiProperty({ example: 'user@Noorah.com' })
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsNotEmpty({ message: 'Email is required' })
   @MaxLength(255, { message: 'Email must not exceed 255 characters' })
@@ -296,3 +296,4 @@ export class SecureFileUploadDto extends SecureBaseDto {
   @Max(10485760, { message: 'File size must not exceed 10MB' })
   fileSize: number;
 }
+

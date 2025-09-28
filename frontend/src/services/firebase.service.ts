@@ -91,8 +91,8 @@ class FirebaseService {
       phoneNumber: firebaseUser.phoneNumber,
       isAnonymous: firebaseUser.isAnonymous,
       metadata: {
-        creationTime: firebaseUser.metadata.creationTime,
-        lastSignInTime: firebaseUser.metadata.lastSignInTime,
+        creationTime: firebaseUser.metadata.creationTime || null,
+        lastSignInTime: firebaseUser.metadata.lastSignInTime || null,
       },
     };
   }
@@ -290,7 +290,7 @@ class FirebaseService {
       }
 
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Authenticate to access NannyRadar',
+        promptMessage: 'Authenticate to access Noorah',
         fallbackLabel: 'Use passcode',
         cancelLabel: 'Cancel',
         disableDeviceFallback: false,

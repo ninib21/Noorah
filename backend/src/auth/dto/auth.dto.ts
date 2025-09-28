@@ -30,9 +30,9 @@ export class RegisterDto {
   @MaxLength(50)
   lastName: string;
 
-  @ApiProperty({ description: 'User type', enum: UserType })
-  @IsEnum(UserType)
-  userType: UserType;
+  @ApiProperty({ description: 'User type', enum: ['parent', 'sitter', 'admin'] })
+  @IsString()
+  userType: string;
 }
 
 export class LoginDto {
@@ -99,7 +99,7 @@ export class AuthResponseDto {
     id: string;
     email: string;
     phone: string;
-    userType: UserType;
+    userType: string;
     firstName: string;
     lastName: string;
     emailVerified: boolean;

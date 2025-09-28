@@ -7,19 +7,23 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Tabs from '../../components/Tabs';
+import type { RootStackParamList } from '../../navigation/types';
 
 const ParentMySittersScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [activeTab, setActiveTab] = useState('favorites');
   const [searchQuery, setSearchQuery] = useState('');
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => favoriteSitters.map(s => s.id));
 
   // Mock data
   const favoriteSitters = [
@@ -73,7 +77,16 @@ const ParentMySittersScreen: React.FC = () => {
     { key: 'all', title: 'All Sitters' },
   ];
 
-  const renderSitterCard = (sitter: any) => (
+  const toggleFavorite = (id: string) => {
+    setFavoriteIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const renderSitterCard = (sitter: any) => {
+    const isFavorite = favoriteIds.includes(sitter.id);
+
+    return (
     <Card key={sitter.id} style={styles.sitterCard}>
       <View style={styles.sitterHeader}>
         <Image source={{ uri: sitter.avatar }} style={styles.sitterAvatar} />
@@ -127,29 +140,44 @@ const ParentMySittersScreen: React.FC = () => {
           title="Book Now"
           variant="primary"
           size="small"
-          onPress={() => navigation.navigate('ParentBook' as never)}
+          onPress={() => navigation.navigate('ParentBook')}
         />
         <Button
           title="Message"
           variant="outline"
           size="small"
-          onPress={() => navigation.navigate('ParentMessages' as never)}
+          onPress={() => navigation.navigate('ParentMessages')}
         />
-        <TouchableOpacity style={styles.favoriteButton}>
-          <Ionicons name="heart" size={20} color="#FF7DB9" />
+        <TouchableOpacity
+          style={[styles.favoriteButton, isFavorite && styles.favoriteButtonActive]}
+          onPress={() => toggleFavorite(sitter.id)}
+        >
+          <Ionicons
+            name={isFavorite ? 'heart' : 'heart-outline'}
+            size={20}
+            color={isFavorite ? '#FFFFFF' : '#FF7DB9'}
+          />
         </TouchableOpacity>
       </View>
     </Card>
-  );
+    );
+  };
 
   const getSittersToShow = () => {
+    const filterBySearch = (list: any[]) =>
+      list.filter(sitter =>
+        !searchQuery ||
+        sitter.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        sitter.skills.some((skill: string) => skill.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+
     switch (activeTab) {
       case 'favorites':
-        return favoriteSitters;
+        return filterBySearch(favoriteSitters);
       case 'recent':
-        return recentSitters;
+        return filterBySearch(recentSitters);
       case 'all':
-        return [...favoriteSitters, ...recentSitters];
+        return filterBySearch([...favoriteSitters, ...recentSitters]);
       default:
         return [];
     }
@@ -170,7 +198,10 @@ const ParentMySittersScreen: React.FC = () => {
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>My Sitters</Text>
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => Alert.alert('Add Sitter', 'Onboarding a new sitter will let them appear in your favorites list.')}
+          >
             <Ionicons name="add" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -214,11 +245,11 @@ const ParentMySittersScreen: React.FC = () => {
                     : 'Start booking sitters to build your list'
                   }
                 </Text>
-                <Button
-                  title="Find Sitters"
-                  variant="primary"
-                  onPress={() => navigation.navigate('ParentBook' as never)}
-                />
+        <Button
+          title="Find Sitters"
+          variant="primary"
+          onPress={() => navigation.navigate('ParentBook')}
+        />
               </View>
             )}
           </ScrollView>
@@ -406,8 +437,11 @@ const styles = StyleSheet.create({
   },
   favoriteButton: {
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: '#FEF2F2',
+  },
+  favoriteButtonActive: {
+    backgroundColor: '#FF7DB9',
   },
   emptyState: {
     alignItems: 'center',

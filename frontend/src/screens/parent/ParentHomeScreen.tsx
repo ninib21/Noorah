@@ -11,12 +11,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Tabs from '../../components/Tabs';
+import type { RootStackParamList } from '../../navigation/types';
 
 const ParentHomeScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [activeTab, setActiveTab] = useState('upcoming');
 
   // Mock data
@@ -66,28 +68,28 @@ const ParentHomeScreen: React.FC = () => {
       title: 'Book a Sitter',
       icon: 'person-add',
       color: '#3A7DFF',
-      onPress: () => navigation.navigate('ParentBook' as never),
+      onPress: () => navigation.navigate('ParentBook'),
     },
     {
       id: '2',
       title: 'My Sitters',
       icon: 'people',
       color: '#FF7DB9',
-      onPress: () => navigation.navigate('ParentMySitters' as never),
+      onPress: () => navigation.navigate('ParentMySitters'),
     },
     {
       id: '3',
       title: 'Messages',
       icon: 'chatbubbles',
       color: '#10B981',
-      onPress: () => navigation.navigate('ParentMessages' as never),
+      onPress: () => navigation.navigate('ParentMessages'),
     },
     {
       id: '4',
       title: 'Emergency',
       icon: 'warning',
       color: '#EF4444',
-      onPress: () => navigation.navigate('EmergencySOS' as never),
+      onPress: () => navigation.navigate('EmergencySOS'),
     },
   ];
 
@@ -121,13 +123,19 @@ const ParentHomeScreen: React.FC = () => {
           title="Message"
           variant="outline"
           size="small"
-          onPress={() => navigation.navigate('ParentMessages' as never)}
+          onPress={() => navigation.navigate('ParentMessages')}
         />
         <Button
           title="View Details"
           variant="ghost"
           size="small"
-          onPress={() => {}}
+          onPress={() =>
+            navigation.navigate('BookingFlow', {
+              sitterId: booking.id,
+              date: booking.date,
+              time: booking.time,
+            })
+          }
         />
       </View>
     </Card>
@@ -167,7 +175,7 @@ const ParentHomeScreen: React.FC = () => {
           </View>
           <TouchableOpacity
             style={styles.profileButton}
-            onPress={() => navigation.navigate('ParentProfile' as never)}
+            onPress={() => navigation.navigate('ParentProfile')}
           >
             <Image
               source={{ uri: 'https://via.placeholder.com/40' }}
@@ -198,7 +206,7 @@ const ParentHomeScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Your Bookings</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('ParentBook')}>
                 <Text style={styles.viewAllText}>View All</Text>
               </TouchableOpacity>
             </View>
@@ -217,7 +225,7 @@ const ParentHomeScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Recent Sitters</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('ParentMySitters' as never)}>
+              <TouchableOpacity onPress={() => navigation.navigate('ParentMySitters')}>
                 <Text style={styles.viewAllText}>View All</Text>
               </TouchableOpacity>
             </View>
@@ -245,7 +253,7 @@ const ParentHomeScreen: React.FC = () => {
                 title="Emergency SOS"
                 variant="secondary"
                 size="small"
-                onPress={() => navigation.navigate('EmergencySOS' as never)}
+                onPress={() => navigation.navigate('EmergencySOS')}
               />
             </Card>
           </View>

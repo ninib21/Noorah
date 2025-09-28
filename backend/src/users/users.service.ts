@@ -49,7 +49,7 @@ export class UsersService {
   async searchSitters(searchDto: any): Promise<User[]> {
     // Placeholder implementation
     return this.userRepository.find({
-      where: { userType: UserType.SITTER },
+      where: { userType: 'sitter' },
       take: 10,
     });
   }

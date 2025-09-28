@@ -5,16 +5,16 @@ module.exports = {
   configurations: {
     'ios.sim.debug': {
       type: 'ios.simulator',
-      binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/nannyradar.app',
-      build: 'xcodebuild -workspace ios/nannyradar.xcworkspace -scheme nannyradar -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build',
+      binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/Noorah.app',
+      build: 'xcodebuild -workspace ios/Noorah.xcworkspace -scheme Noorah -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build',
       device: {
         type: 'iPhone 14',
       },
     },
     'ios.sim.release': {
       type: 'ios.simulator',
-      binaryPath: 'ios/build/Build/Products/Release-iphonesimulator/nannyradar.app',
-      build: 'xcodebuild -workspace ios/nannyradar.xcworkspace -scheme nannyradar -configuration Release -sdk iphonesimulator -derivedDataPath ios/build',
+      binaryPath: 'ios/build/Build/Products/Release-iphonesimulator/Noorah.app',
+      build: 'xcodebuild -workspace ios/Noorah.xcworkspace -scheme Noorah -configuration Release -sdk iphonesimulator -derivedDataPath ios/build',
       device: {
         type: 'iPhone 14',
       },

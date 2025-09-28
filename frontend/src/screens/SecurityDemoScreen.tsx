@@ -102,7 +102,7 @@ const SecurityDemoScreen: React.FC = () => {
 
           {/* Security Benefits */}
           <View style={styles.benefitsContainer}>
-            <Text style={styles.sectionTitle}>Why Choose NannyRadar?</Text>
+            <Text style={styles.sectionTitle}>Why Choose Noorah?</Text>
             
             <View style={styles.benefitItem}>
               <Ionicons name="shield-checkmark" size={20} color="#FFFFFF" />

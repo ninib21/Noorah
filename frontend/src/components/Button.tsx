@@ -18,6 +18,8 @@ interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -30,6 +32,8 @@ const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
   icon,
+  accessibilityLabel,
+  accessibilityHint,
 }) => {
   const getButtonStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
@@ -105,6 +109,8 @@ const Button: React.FC<ButtonProps> = ({
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
     >
       {loading ? (
         <ActivityIndicator
@@ -122,3 +128,4 @@ const Button: React.FC<ButtonProps> = ({
 };
 
 export default Button; 
+

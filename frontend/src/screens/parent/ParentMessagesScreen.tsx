@@ -175,6 +175,24 @@ const ParentMessagesScreen: React.FC = () => {
     });
   };
 
+  const handleCall = () => {
+    if (!selectedConversation) return;
+    Alert.alert('Voice Call', `Starting a secure call with ${selectedConversation.participantName}.`);
+  };
+
+  const handleVideoCall = () => {
+    if (!selectedConversation) return;
+    Alert.alert('Video Call', `Opening a live video session with ${selectedConversation.participantName}.`);
+  };
+
+  const handleAttachment = () => {
+    Alert.alert('Add Attachment', 'Attachment tools will let you share files, locations, and caregiver checklists.');
+  };
+
+  const handleCamera = () => {
+    Alert.alert('Camera', 'Camera access will allow quick photo or video updates during sessions.');
+  };
+
   const handleBackToConversations = () => {
     setSelectedConversation(null);
     setMessages([]);
@@ -278,10 +296,10 @@ const ParentMessagesScreen: React.FC = () => {
       </View>
       
       <View style={styles.chatActions}>
-        <TouchableOpacity style={styles.chatActionButton}>
+        <TouchableOpacity style={styles.chatActionButton} onPress={handleCall}>
           <Ionicons name="call" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.chatActionButton}>
+        <TouchableOpacity style={styles.chatActionButton} onPress={handleVideoCall}>
           <Ionicons name="videocam" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
@@ -328,7 +346,7 @@ const ParentMessagesScreen: React.FC = () => {
   const renderMessageInput = () => (
     <Animated.View entering={SlideInRight.delay(300)} style={styles.messageInputContainer}>
       <View style={styles.inputRow}>
-        <TouchableOpacity style={styles.inputAction}>
+        <TouchableOpacity style={styles.inputAction} onPress={handleAttachment}>
           <Ionicons name="add" size={24} color="#6B7280" />
         </TouchableOpacity>
         
@@ -343,7 +361,7 @@ const ParentMessagesScreen: React.FC = () => {
           />
         </View>
         
-        <TouchableOpacity style={styles.inputAction}>
+        <TouchableOpacity style={styles.inputAction} onPress={handleCamera}>
           <Ionicons name="camera" size={24} color="#6B7280" />
         </TouchableOpacity>
         

@@ -21,7 +21,7 @@ import FeedbackService, {
   ChurnAnalysis,
   SessionData,
 } from '../services/feedback.service';
-import { AnimatedCard, AnimatedProgressBar } from '../components/AnimatedComponents';
+import { AnimatedCard, AnimatedProgressBar, AnimatedGradientBackground } from '../components/AnimatedComponents';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -570,3 +570,4 @@ const styles = StyleSheet.create({
 });
 
 export default FeedbackAnalyticsScreen; 
+

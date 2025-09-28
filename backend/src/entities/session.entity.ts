@@ -22,13 +22,12 @@ export class Session {
   id: string;
 
   @Column({
-    type: 'enum',
-    enum: SessionStatus,
-    default: SessionStatus.ACTIVE,
+    type: 'varchar',
+    default: 'active',
   })
-  status: SessionStatus;
+  status: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   startTime: Date;
 
   @Column({ nullable: true })
@@ -77,7 +76,7 @@ export class Session {
   updatedAt: Date;
 
   // Relationships
-  @ManyToOne(() => Booking, booking => booking.sessions)
+  @ManyToOne(() => Booking)
   @JoinColumn({ name: 'bookingId' })
   booking: Booking;
 
@@ -86,11 +85,11 @@ export class Session {
 
   // Helper methods
   get isActive(): boolean {
-    return this.status === SessionStatus.ACTIVE;
+    return this.status === 'active';
   }
 
   get isCompleted(): boolean {
-    return this.status === SessionStatus.COMPLETED;
+    return this.status === 'completed';
   }
 
   get duration(): number {

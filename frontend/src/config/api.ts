@@ -1,8 +1,8 @@
 // API Configuration
 export const API_CONFIG = {
-  baseURL: __DEV__
+  baseURL: process.env.NODE_ENV === 'development'
     ? 'http://localhost:3001' // Development URL
-    : 'https://api.nannyradar.com'; // Production URL
+    : 'https://api.Noorah.com', // Production URL
 };
 
 // API Endpoints
@@ -135,7 +135,7 @@ export const CACHE_CONFIG = {
 
 // Stripe Configuration
 export const STRIPE_CONFIG = {
-  PUBLISHABLE_KEY: __DEV__ 
+  PUBLISHABLE_KEY: process.env.NODE_ENV === 'development'
     ? 'pk_test_your_stripe_publishable_key' 
     : 'pk_live_your_stripe_publishable_key',
   CURRENCY: 'usd',

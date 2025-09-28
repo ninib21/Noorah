@@ -125,7 +125,7 @@ export class UsersController {
 
   // Admin only endpoints
   @Get()
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Get all users (Admin only)' })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   @ApiQuery({ name: 'page', required: false })
@@ -137,7 +137,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Get user by ID (Admin only)' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -146,7 +146,7 @@ export class UsersController {
   }
 
   @Put(':id')
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Update user (Admin only)' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -155,7 +155,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Delete user (Admin only)' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -164,7 +164,7 @@ export class UsersController {
   }
 
   @Post(':id/verify')
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Verify user (Admin only)' })
   @ApiResponse({ status: 200, description: 'User verified successfully' })
   async verifyUser(@Param('id') id: string) {
@@ -172,7 +172,7 @@ export class UsersController {
   }
 
   @Post(':id/suspend')
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Suspend user (Admin only)' })
   @ApiResponse({ status: 200, description: 'User suspended successfully' })
   async suspendUser(@Param('id') id: string) {
@@ -180,7 +180,7 @@ export class UsersController {
   }
 
   @Post(':id/activate')
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Activate user (Admin only)' })
   @ApiResponse({ status: 200, description: 'User activated successfully' })
   async activateUser(@Param('id') id: string) {

@@ -263,7 +263,7 @@ export class SitterMatchService {
 
     return this.userRepository
       .createQueryBuilder('user')
-      .where('user.userType = :userType', { userType: UserType.SITTER })
+      .where('user.userType = :userType', { userType: 'sitter' })
       .andWhere('user.status IN (:...statuses)', { 
         statuses: ['active', 'verified'] 
       })
@@ -365,7 +365,7 @@ export class SitterMatchService {
   async findMatches(preferences: any, limit: number = 10): Promise<any[]> {
     // In a real implementation, you'd implement sophisticated matching logic
     const sitters = await this.userRepository.find({
-      where: { userType: UserType.SITTER },
+      where: { userType: 'sitter' },
       relations: ['sitterProfile'],
       take: limit,
     });
@@ -529,7 +529,7 @@ export class SitterMatchService {
     // Find sitters available during the pattern time
     return this.userRepository
       .createQueryBuilder('user')
-      .where('user.userType = :userType', { userType: UserType.SITTER })
+      .where('user.userType = :userType', { userType: 'sitter' })
       .andWhere('user.status IN (:...statuses)', { 
         statuses: ['active', 'verified'] 
       })

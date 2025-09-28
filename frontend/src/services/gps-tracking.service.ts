@@ -75,20 +75,12 @@ export class GPSTrackingService {
 
       this.currentSession = session;
 
-      // Configure location tracking
-      await Location.setGoogleApiKey(process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '');
-
       // Start location updates with high accuracy
       this.locationSubscription = await Location.watchPositionAsync(
         {
           accuracy: LocationAccuracy.BestForNavigation,
           timeInterval: 30000, // 30 seconds
           distanceInterval: 10, // 10 meters
-          foregroundService: {
-            notificationTitle: 'NannyRadar Tracking',
-            notificationBody: 'Tracking your location for safety',
-            notificationColor: '#3A7DFF',
-          },
         },
         (location) => {
           this.handleLocationUpdate(location);

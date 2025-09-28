@@ -115,8 +115,8 @@ const SecuritySettingsScreen: React.FC = () => {
   };
 
   const renderSecuritySection = (title: string, children: React.ReactNode) => (
-    <Card variant="elevated" className="mb-4">
-      <Text className="text-lg font-semibold text-gray-800 mb-3">{title}</Text>
+    <Card variant="elevated" style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
       {children}
     </Card>
   );
@@ -128,14 +128,14 @@ const SecuritySettingsScreen: React.FC = () => {
     onValueChange: (value: boolean) => void,
     icon?: string
   ) => (
-    <View className="flex-row items-center justify-between py-3 border-b border-gray-100">
-      <View className="flex-1 flex-row items-center">
+    <View style={styles.settingItem}>
+      <View style={styles.settingContent}>
         {icon && (
           <Ionicons name={icon as any} size={20} color="#3A7DFF" className="mr-3" />
         )}
-        <View className="flex-1">
-          <Text className="text-base font-medium text-gray-800">{title}</Text>
-          <Text className="text-sm text-gray-600 mt-1">{description}</Text>
+        <View style={styles.settingInfo}>
+          <Text style={styles.settingTitle}>{title}</Text>
+          <Text style={styles.settingDescription}>{description}</Text>
         </View>
       </View>
       <Switch
@@ -149,14 +149,14 @@ const SecuritySettingsScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50">
+      <SafeAreaView style={styles.container}>
         <LinearGradient
           colors={['#3A7DFF', '#FF7DB9']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="flex-1 justify-center items-center"
+          style={styles.loadingContainer}
         >
-          <Text className="text-white text-lg">Loading security settings...</Text>
+          <Text style={styles.loadingText}>Loading security settings...</Text>
         </LinearGradient>
       </SafeAreaView>
     );
@@ -164,36 +164,36 @@ const SecuritySettingsScreen: React.FC = () => {
 
   if (!config) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50">
+      <SafeAreaView style={styles.container}>
         <LinearGradient
           colors={['#3A7DFF', '#FF7DB9']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="flex-1 justify-center items-center"
+          style={styles.loadingContainer}
         >
-          <Text className="text-white text-lg">Failed to load security settings</Text>
+          <Text style={styles.loadingText}>Failed to load security settings</Text>
         </LinearGradient>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView style={styles.container}>
       <LinearGradient
         colors={['#3A7DFF', '#FF7DB9']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        className="px-4 py-6"
+        style={styles.content}
       >
-        <View className="flex-row items-center">
-          <TouchableOpacity className="mr-4">
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <Text className="text-2xl font-bold text-white">Security Settings</Text>
+          <Text style={styles.headerTitle}>Security Settings</Text>
         </View>
       </LinearGradient>
 
-      <ScrollView className="flex-1 px-4 py-6">
+      <ScrollView style={styles.content}>
         {/* Authentication Section */}
         {renderSecuritySection('Authentication', (
           <View>
@@ -206,14 +206,14 @@ const SecuritySettingsScreen: React.FC = () => {
             )}
             
             <TouchableOpacity
-              className="flex-row items-center justify-between py-3 border-b border-gray-100"
+              style={styles.settingItem}
               onPress={setupMFA}
             >
-              <View className="flex-1 flex-row items-center">
+              <View style={styles.settingContent}>
                 <Ionicons name="shield-checkmark" size={20} color="#3A7DFF" className="mr-3" />
-                <View className="flex-1">
-                  <Text className="text-base font-medium text-gray-800">Two-Factor Authentication</Text>
-                  <Text className="text-sm text-gray-600 mt-1">Add an extra layer of security</Text>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingTitle}>Two-Factor Authentication</Text>
+                  <Text style={styles.settingDescription}>Add an extra layer of security</Text>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -283,14 +283,14 @@ const SecuritySettingsScreen: React.FC = () => {
             )}
             
             <TouchableOpacity
-              className="flex-row items-center justify-between py-3 border-b border-gray-100"
+              style={styles.settingItem}
               onPress={() => setShowGeoFencingModal(true)}
             >
-              <View className="flex-1 flex-row items-center">
+              <View style={styles.settingContent}>
                 <Ionicons name="map" size={20} color="#3A7DFF" className="mr-3" />
-                <View className="flex-1">
-                  <Text className="text-base font-medium text-gray-800">Allowed Regions</Text>
-                  <Text className="text-sm text-gray-600 mt-1">
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingTitle}>Allowed Regions</Text>
+                  <Text style={styles.settingDescription}>
                     {config.allowedRegions.length} regions configured
                   </Text>
                 </View>
@@ -312,14 +312,14 @@ const SecuritySettingsScreen: React.FC = () => {
             )}
             
             <TouchableOpacity
-              className="flex-row items-center justify-between py-3 border-b border-gray-100"
+              style={styles.settingItem}
               onPress={() => setShowEmergencyContactsModal(true)}
             >
-              <View className="flex-1 flex-row items-center">
+              <View style={styles.settingContent}>
                 <Ionicons name="people" size={20} color="#3A7DFF" className="mr-3" />
-                <View className="flex-1">
-                  <Text className="text-base font-medium text-gray-800">Emergency Contacts</Text>
-                  <Text className="text-sm text-gray-600 mt-1">
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingTitle}>Emergency Contacts</Text>
+                  <Text style={styles.settingDescription}>
                     {config.emergencyContacts.length} contacts configured
                   </Text>
                 </View>
@@ -343,37 +343,37 @@ const SecuritySettingsScreen: React.FC = () => {
         ))}
 
         {/* Security Status */}
-        <Card variant="elevated" className="mt-6">
-          <Text className="text-lg font-semibold text-gray-800 mb-3">Security Status</Text>
-          <View className="space-y-2">
-            <View className="flex-row justify-between">
-              <Text className="text-gray-600">HTTPS Enforcement</Text>
-              <View className={`px-2 py-1 rounded ${config.enforceHTTPS ? 'bg-green-100' : 'bg-red-100'}`}>
-                <Text className={`text-xs font-medium ${config.enforceHTTPS ? 'text-green-800' : 'text-red-800'}`}>
+        <Card variant="elevated" style={styles.section}>
+          <Text style={styles.sectionTitle}>Security Status</Text>
+          <View style={styles.section}>
+            <View style={styles.settingItem}>
+              <Text style={styles.settingDescription}>HTTPS Enforcement</Text>
+              <View style={[styles.statusBadge, config.enforceHTTPS ? styles.statusActive : styles.statusInactive]}>
+                <Text style={[styles.statusText, config.enforceHTTPS ? styles.statusTextActive : styles.statusTextInactive]}>
                   {config.enforceHTTPS ? 'Active' : 'Inactive'}
                 </Text>
               </View>
             </View>
-            <View className="flex-row justify-between">
-              <Text className="text-gray-600">Encryption</Text>
-              <View className={`px-2 py-1 rounded ${config.encryptionEnabled ? 'bg-green-100' : 'bg-red-100'}`}>
-                <Text className={`text-xs font-medium ${config.encryptionEnabled ? 'text-green-800' : 'text-red-800'}`}>
+            <View style={styles.settingItem}>
+              <Text style={styles.settingDescription}>Encryption</Text>
+              <View style={[styles.statusBadge, config.encryptionEnabled ? styles.statusActive : styles.statusInactive]}>
+                <Text style={[styles.statusText, config.encryptionEnabled ? styles.statusTextActive : styles.statusTextInactive]}>
                   {config.encryptionEnabled ? 'Active' : 'Inactive'}
                 </Text>
               </View>
             </View>
-            <View className="flex-row justify-between">
-              <Text className="text-gray-600">Geo-fencing</Text>
-              <View className={`px-2 py-1 rounded ${config.geoFencingEnabled ? 'bg-green-100' : 'bg-red-100'}`}>
-                <Text className={`text-xs font-medium ${config.geoFencingEnabled ? 'text-green-800' : 'text-red-800'}`}>
+            <View style={styles.settingItem}>
+              <Text style={styles.settingDescription}>Geo-fencing</Text>
+              <View style={[styles.statusBadge, config.geoFencingEnabled ? styles.statusActive : styles.statusInactive]}>
+                <Text style={[styles.statusText, config.geoFencingEnabled ? styles.statusTextActive : styles.statusTextInactive]}>
                   {config.geoFencingEnabled ? 'Active' : 'Inactive'}
                 </Text>
               </View>
             </View>
-            <View className="flex-row justify-between">
-              <Text className="text-gray-600">Biometric Auth</Text>
-              <View className={`px-2 py-1 rounded ${biometricEnabled ? 'bg-green-100' : 'bg-red-100'}`}>
-                <Text className={`text-xs font-medium ${biometricEnabled ? 'text-green-800' : 'text-red-800'}`}>
+            <View style={styles.settingItem}>
+              <Text style={styles.settingDescription}>Biometric Auth</Text>
+              <View style={[styles.statusBadge, biometricEnabled ? styles.statusActive : styles.statusInactive]}>
+                <Text style={[styles.statusText, biometricEnabled ? styles.statusTextActive : styles.statusTextInactive]}>
                   {biometricEnabled ? 'Active' : 'Inactive'}
                 </Text>
               </View>
@@ -389,15 +389,15 @@ const SecuritySettingsScreen: React.FC = () => {
         title="Setup Two-Factor Authentication"
         size="large"
       >
-        <View className="p-4">
-          <Text className="text-gray-600 mb-4">
+        <View style={styles.modalContent}>
+          <Text style={styles.manualCodeText}>
             Scan the QR code with your authenticator app (Google Authenticator, Authy, etc.)
           </Text>
-          <View className="bg-gray-100 p-4 rounded-lg mb-4">
-            <Text className="text-center text-gray-500">QR Code Placeholder</Text>
+          <View style={styles.qrCodeContainer}>
+            <Text style={styles.qrCodeText}>QR Code Placeholder</Text>
           </View>
-          <Text className="text-gray-600 mb-4">
-            Or enter this code manually: <Text className="font-mono">JBSWY3DPEHPK3PXP</Text>
+          <Text style={styles.manualCodeText}>
+            Or enter this code manually: <Text style={styles.codeText}>JBSWY3DPEHPK3PXP</Text>
           </Text>
           <Button
             title="Enable MFA"
@@ -417,17 +417,17 @@ const SecuritySettingsScreen: React.FC = () => {
         title="Allowed Regions"
         size="large"
       >
-        <View className="p-4">
-          <Text className="text-gray-600 mb-4">
+        <View style={styles.modalContent}>
+          <Text style={styles.manualCodeText}>
             Configure regions where the app can be used
           </Text>
           {config.allowedRegions.length === 0 ? (
-            <Text className="text-center text-gray-500 mb-4">No regions configured</Text>
+            <Text style={styles.qrCodeText}>No regions configured</Text>
           ) : (
             config.allowedRegions.map((region) => (
-              <View key={region.id} className="bg-gray-50 p-3 rounded-lg mb-2">
-                <Text className="font-medium">{region.name}</Text>
-                <Text className="text-sm text-gray-600">
+              <View key={region.id} style={styles.regionItem}>
+                <Text style={styles.regionName}>{region.name}</Text>
+                <Text style={styles.regionDetails}>
                   {region.latitude.toFixed(4)}, {region.longitude.toFixed(4)} (Radius: {region.radius}m)
                 </Text>
               </View>
@@ -451,18 +451,18 @@ const SecuritySettingsScreen: React.FC = () => {
         title="Emergency Contacts"
         size="large"
       >
-        <View className="p-4">
-          <Text className="text-gray-600 mb-4">
+        <View style={styles.modalContent}>
+          <Text style={styles.manualCodeText}>
             Configure contacts to notify in emergency situations
           </Text>
           {config.emergencyContacts.length === 0 ? (
-            <Text className="text-center text-gray-500 mb-4">No emergency contacts configured</Text>
+            <Text style={styles.qrCodeText}>No emergency contacts configured</Text>
           ) : (
             config.emergencyContacts.map((contact) => (
-              <View key={contact.id} className="bg-gray-50 p-3 rounded-lg mb-2">
-                <Text className="font-medium">{contact.name}</Text>
-                <Text className="text-sm text-gray-600">{contact.phone}</Text>
-                <Text className="text-xs text-gray-500">{contact.relationship}</Text>
+              <View key={contact.id} style={styles.regionItem}>
+                <Text style={styles.regionName}>{contact.name}</Text>
+                <Text style={styles.regionDetails}>{contact.phone}</Text>
+                <Text style={styles.contactRelationship}>{contact.relationship}</Text>
               </View>
             ))
           )}
@@ -479,5 +479,162 @@ const SecuritySettingsScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+  },
+  backButton: {
+    marginRight: 16,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+  },
+  section: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  settingContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingInfo: {
+    flex: 1,
+  },
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1f2937',
+  },
+  settingDescription: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  statusActive: {
+    backgroundColor: '#dcfce7',
+  },
+  statusInactive: {
+    backgroundColor: '#fef2f2',
+  },
+  statusTextActive: {
+    color: '#166534',
+  },
+  statusTextInactive: {
+    color: '#991b1b',
+  },
+  modalContent: {
+    padding: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  qrCodeContainer: {
+    backgroundColor: '#f3f4f6',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  qrCodeText: {
+    textAlign: 'center',
+    color: '#6b7280',
+  },
+  manualCodeText: {
+    color: '#6b7280',
+    marginBottom: 16,
+  },
+  codeText: {
+    fontFamily: 'monospace',
+  },
+  regionItem: {
+    backgroundColor: '#f9fafb',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  regionName: {
+    fontWeight: '500',
+  },
+  regionDetails: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  contactItem: {
+    backgroundColor: '#f9fafb',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  contactName: {
+    fontWeight: '500',
+  },
+  contactPhone: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  contactRelationship: {
+    fontSize: 12,
+    color: '#9ca3af',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: 18,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: 'white',
+    fontSize: 18,
+  },
+});
 
 export default SecuritySettingsScreen; 

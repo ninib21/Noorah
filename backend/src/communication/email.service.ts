@@ -28,7 +28,7 @@ export class EmailService {
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
       const mailOptions = {
-        from: options.from || process.env.SMTP_FROM || 'noreply@nannyradar.com',
+        from: options.from || process.env.SMTP_FROM || 'noreply@Noorah.com',
         to: options.to,
         subject: options.subject,
         html: options.html,
@@ -45,14 +45,14 @@ export class EmailService {
 
   async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
     const html = `
-      <h1>Welcome to NannyRadar, ${name}!</h1>
+      <h1>Welcome to Noorah, ${name}!</h1>
       <p>Thank you for joining our community of trusted babysitters and parents.</p>
       <p>We're excited to help you find the perfect match for your childcare needs.</p>
     `;
 
     return this.sendEmail({
       to: email,
-      subject: 'Welcome to NannyRadar!',
+      subject: 'Welcome to Noorah!',
       html,
     });
   }
@@ -68,7 +68,7 @@ export class EmailService {
 
     return this.sendEmail({
       to: email,
-      subject: 'Booking Confirmation - NannyRadar',
+      subject: 'Booking Confirmation - Noorah',
       html,
     });
   }
@@ -78,7 +78,7 @@ export class EmailService {
     
     const html = `
       <h1>Password Reset Request</h1>
-      <p>You requested a password reset for your NannyRadar account.</p>
+      <p>You requested a password reset for your Noorah account.</p>
       <p>Click the link below to reset your password:</p>
       <a href="${resetUrl}">Reset Password</a>
       <p>This link will expire in 1 hour.</p>
@@ -86,7 +86,7 @@ export class EmailService {
 
     return this.sendEmail({
       to: email,
-      subject: 'Password Reset - NannyRadar',
+      subject: 'Password Reset - Noorah',
       html,
     });
   }
@@ -103,7 +103,7 @@ export class EmailService {
 
     return this.sendEmail({
       to: email,
-      subject: '🚨 Emergency Alert - NannyRadar',
+      subject: '🚨 Emergency Alert - Noorah',
       html,
     });
   }

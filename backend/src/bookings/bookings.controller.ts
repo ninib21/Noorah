@@ -171,7 +171,7 @@ export class BookingsController {
 
   // Admin only endpoints
   @Get()
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Get all bookings (Admin only)' })
   @ApiResponse({ status: 200, description: 'Bookings retrieved successfully' })
   @ApiQuery({ name: 'status', required: false })
@@ -182,7 +182,7 @@ export class BookingsController {
   }
 
   @Delete(':id')
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Delete booking (Admin only)' })
   @ApiResponse({ status: 200, description: 'Booking deleted successfully' })
   async deleteBooking(@Param('id') id: string) {
@@ -190,7 +190,7 @@ export class BookingsController {
   }
 
   @Post(':id/refund')
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Process refund (Admin only)' })
   @ApiResponse({ status: 200, description: 'Refund processed successfully' })
   async processRefund(@Param('id') id: string, @Body() refundData: any) {
@@ -205,7 +205,7 @@ export class BookingsController {
   }
 
   @Put(':id/dispute/:disputeId/resolve')
-  @Roles(UserType.ADMIN)
+  @Roles('admin')
   @ApiOperation({ summary: 'Resolve dispute (Admin only)' })
   @ApiResponse({ status: 200, description: 'Dispute resolved successfully' })
   async resolveDispute(@Param('id') id: string, @Param('disputeId') disputeId: string, @Body() resolutionData: any) {

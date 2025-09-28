@@ -91,7 +91,7 @@ class SecurityConfigService {
       // TLS/HTTPS Settings
       enforceHTTPS: true,
       certificatePinning: true,
-      allowedDomains: ['api.nannyradar.com', 'firebase.googleapis.com'],
+      allowedDomains: ['api.Noorah.com', 'firebase.googleapis.com'],
       
       // Encryption Settings
       encryptionEnabled: true,

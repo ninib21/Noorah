@@ -224,7 +224,7 @@ export class IntegrationService {
             {
               key: 'event',
               label: 'EVENT',
-              value: 'NannyRadar Session',
+              value: 'Noorah Session',
             },
           ],
           secondaryFields: [
@@ -472,7 +472,7 @@ export class IntegrationService {
   private async uploadToS3(file: Buffer, key: string, contentType: string): Promise<any> {
     // Upload file to AWS S3
     return {
-      url: `https://cdn.nannyradar.com/${key}`,
+      url: `https://cdn.Noorah.com/${key}`,
       key,
       metadata: {},
     };
@@ -484,7 +484,7 @@ export class IntegrationService {
 
   private async generatePresignedUrl(key: string, expiresIn?: number): Promise<string> {
     // Generate presigned URL for S3
-    return `https://cdn.nannyradar.com/${key}?expires=${Date.now() + (expiresIn || 3600) * 1000}`;
+    return `https://cdn.Noorah.com/${key}?expires=${Date.now() + (expiresIn || 3600) * 1000}`;
   }
 
   private async sendToEmailService(emailData: any): Promise<any> {

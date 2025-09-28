@@ -62,13 +62,13 @@ export class SeedService {
     const users = [
       // Admin user
       {
-        email: 'admin@nannyradar.com',
+        email: 'admin@Noorah.com',
         phone: '+1234567890',
         password: await bcrypt.hash('admin123', 10),
         firstName: 'Admin',
         lastName: 'User',
-        userType: UserType.ADMIN,
-        status: UserStatus.ACTIVE,
+        userType: 'admin',
+        status: 'active',
         emailVerified: true,
         phoneVerified: true,
       },
@@ -79,8 +79,8 @@ export class SeedService {
         password: await bcrypt.hash('password123', 10),
         firstName: 'Sarah',
         lastName: 'Johnson',
-        userType: UserType.PARENT,
-        status: UserStatus.ACTIVE,
+        userType: 'parent',
+        status: 'active',
         emailVerified: true,
         phoneVerified: true,
       },
@@ -90,8 +90,8 @@ export class SeedService {
         password: await bcrypt.hash('password123', 10),
         firstName: 'Mike',
         lastName: 'Chen',
-        userType: UserType.PARENT,
-        status: UserStatus.ACTIVE,
+        userType: 'parent',
+        status: 'active',
         emailVerified: true,
         phoneVerified: true,
       },
@@ -102,8 +102,8 @@ export class SeedService {
         password: await bcrypt.hash('password123', 10),
         firstName: 'Emma',
         lastName: 'Wilson',
-        userType: UserType.SITTER,
-        status: UserStatus.ACTIVE,
+        userType: 'sitter',
+        status: 'active',
         emailVerified: true,
         phoneVerified: true,
         hourlyRate: 25.00,
@@ -116,8 +116,8 @@ export class SeedService {
         password: await bcrypt.hash('password123', 10),
         firstName: 'James',
         lastName: 'Rodriguez',
-        userType: UserType.SITTER,
-        status: UserStatus.ACTIVE,
+        userType: 'sitter',
+        status: 'active',
         emailVerified: true,
         phoneVerified: true,
         hourlyRate: 30.00,
@@ -130,8 +130,8 @@ export class SeedService {
         password: await bcrypt.hash('password123', 10),
         firstName: 'Lisa',
         lastName: 'Thompson',
-        userType: UserType.SITTER,
-        status: UserStatus.ACTIVE,
+        userType: 'sitter',
+        status: 'active',
         emailVerified: true,
         phoneVerified: true,
         hourlyRate: 28.00,
@@ -148,8 +148,8 @@ export class SeedService {
     const sitterProfileRepository = this.dataSource.getRepository(SitterProfile);
     const parentProfileRepository = this.dataSource.getRepository(ParentProfile);
 
-    const sitters = users.filter(user => user.userType === UserType.SITTER);
-    const parents = users.filter(user => user.userType === UserType.PARENT);
+    const sitters = users.filter(user => user.userType === 'sitter');
+    const parents = users.filter(user => user.userType === 'parent');
 
     // Create sitter profiles
     const sitterProfiles = sitters.map((sitter, index) => ({
@@ -212,8 +212,8 @@ export class SeedService {
   private async createBookings(users: User[]): Promise<Booking[]> {
     const bookingRepository = this.dataSource.getRepository(Booking);
     
-    const parents = users.filter(user => user.userType === UserType.PARENT);
-    const sitters = users.filter(user => user.userType === UserType.SITTER);
+    const parents = users.filter(user => user.userType === 'parent');
+    const sitters = users.filter(user => user.userType === 'sitter');
 
     const bookings: any[] = [];
     const now = new Date();
@@ -375,7 +375,7 @@ export class SeedService {
   private async createVerificationDocuments(users: User[]): Promise<void> {
     const verificationRepository = this.dataSource.getRepository(VerificationDocument);
 
-    const sitters = users.filter(user => user.userType === UserType.SITTER);
+    const sitters = users.filter(user => user.userType === 'sitter');
     
     const documents = sitters.flatMap(sitter => [
       {
@@ -445,7 +445,7 @@ export class SeedService {
         priority: NotificationPriority.NORMAL,
         status: NotificationStatus.SENT,
         channel: NotificationChannel.PUSH,
-        title: 'Welcome to NannyRadar!',
+        title: 'Welcome to Noorah!',
         message: 'Thank you for joining our community. We\'re excited to help you find great childcare.',
         sentAt: new Date(user.createdAt.getTime() + (24 * 60 * 60 * 1000)),
         deliveredAt: new Date(user.createdAt.getTime() + (24 * 60 * 60 * 1000) + (5 * 60 * 1000)),
@@ -457,7 +457,7 @@ export class SeedService {
         status: NotificationStatus.SENT,
         channel: NotificationChannel.IN_APP,
         title: 'App Update Available',
-        message: 'A new version of NannyRadar is available with improved features.',
+        message: 'A new version of Noorah is available with improved features.',
         sentAt: new Date(),
         deliveredAt: new Date(),
       },

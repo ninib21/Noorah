@@ -36,6 +36,16 @@ export enum SubscriptionTier {
   PREMIUM = 'premium',
 }
 
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+  MODERATOR = 'moderator',
+  AGENCY_ADMIN = 'agency_admin',
+  AGENCY_USER = 'agency_user',
+  PLATFORM_ADMIN = 'platform_admin',
+  ENTERPRISE_ADMIN = 'enterprise_admin',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -57,25 +67,22 @@ export class User {
   lastName: string;
 
   @Column({
-    type: 'enum',
-    enum: UserType,
-    default: UserType.PARENT,
+    type: 'varchar',
+    default: 'parent',
   })
-  userType: UserType;
+  userType: string;
 
   @Column({
-    type: 'enum',
-    enum: UserStatus,
-    default: UserStatus.ACTIVE,
+    type: 'varchar',
+    default: 'active',
   })
-  status: UserStatus;
+  status: string;
 
   @Column({
-    type: 'enum',
-    enum: SubscriptionTier,
-    default: SubscriptionTier.FREE,
+    type: 'varchar',
+    default: 'free',
   })
-  subscriptionTier: SubscriptionTier;
+  subscriptionTier: string;
 
   @Column({ nullable: true })
   profilePicture: string;
@@ -175,14 +182,14 @@ export class User {
   }
 
   get isPremium(): boolean {
-    return this.subscriptionTier === SubscriptionTier.PREMIUM;
+    return this.subscriptionTier === 'premium';
   }
 
   get isActive(): boolean {
-    return this.status === UserStatus.ACTIVE;
+    return this.status === 'active';
   }
 
   get hasProfile(): boolean {
-    return this.userType === UserType.SITTER ? !!this.sitterProfile : !!this.parentProfile;
+    return this.userType === 'sitter' ? !!this.sitterProfile : !!this.parentProfile;
   }
 } 

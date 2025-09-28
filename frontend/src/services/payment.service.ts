@@ -1,4 +1,5 @@
-import { API_BASE_URL } from '../config/api';
+import { API_CONFIG } from '../config/api';
+import * as SecureStore from 'expo-secure-store';
 
 export interface PaymentIntent {
   paymentIntentId: string;
@@ -61,15 +62,16 @@ export interface PaymentMethod {
 }
 
 class PaymentService {
-  private baseUrl = `${API_BASE_URL}/payments`;
+  private baseUrl = `${API_CONFIG.baseURL}/api/v1/payments`;
 
   // Create payment intent for booking
   async createPaymentIntent(bookingId: string, paymentMethodId?: string): Promise<PaymentIntent> {
-    const response = await fetch(`${this.baseUrl}/create-intent`, {
+    const token = await this.getAuthToken();
+    const response = await fetch(`${this.baseUrl}/create-payment-intent`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({
         bookingId,
@@ -86,11 +88,12 @@ class PaymentService {
 
   // Process payment (capture funds)
   async processPayment(paymentIntentId: string): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/process`, {
+    const token = await this.getAuthToken();
+    const response = await fetch(`${this.baseUrl}/process-payment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({
         paymentIntentId,
@@ -110,7 +113,7 @@ class PaymentService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -127,7 +130,7 @@ class PaymentService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
       body: JSON.stringify({
         reason,
@@ -154,7 +157,7 @@ class PaymentService {
 
     const response = await fetch(`${this.baseUrl}?${params}`, {
       headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -169,7 +172,7 @@ class PaymentService {
   async getPayment(paymentId: string): Promise<Payment> {
     const response = await fetch(`${this.baseUrl}/${paymentId}`, {
       headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -184,7 +187,7 @@ class PaymentService {
   async getBookingPayments(bookingId: string): Promise<Payment[]> {
     const response = await fetch(`${this.baseUrl}/booking/${bookingId}`, {
       headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -201,7 +204,7 @@ class PaymentService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -216,7 +219,7 @@ class PaymentService {
   async getSitterConnectStatus(): Promise<StripeConnectStatus> {
     const response = await fetch(`${this.baseUrl}/sitter/connect/status`, {
       headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -233,7 +236,7 @@ class PaymentService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -250,7 +253,7 @@ class PaymentService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
       body: JSON.stringify({
         amount,
@@ -268,7 +271,7 @@ class PaymentService {
   async getSitterEarnings(period: string = 'month'): Promise<SitterEarnings> {
     const response = await fetch(`${this.baseUrl}/sitter/earnings?period=${period}`, {
       headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -283,7 +286,7 @@ class PaymentService {
   async getSitterPayouts(): Promise<PayoutHistory[]> {
     const response = await fetch(`${this.baseUrl}/sitter/payouts`, {
       headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -300,7 +303,7 @@ class PaymentService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
       body: JSON.stringify({
         token,
@@ -319,7 +322,7 @@ class PaymentService {
   async getParentPaymentMethods(): Promise<PaymentMethod[]> {
     const response = await fetch(`${this.baseUrl}/parent/payment-methods`, {
       headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -335,7 +338,7 @@ class PaymentService {
     const response = await fetch(`${this.baseUrl}/parent/payment-methods/${methodId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        ...(await this.getAuthToken() && { Authorization: `Bearer ${await this.getAuthToken()}` }),
       },
     });
 
@@ -346,10 +349,13 @@ class PaymentService {
     return response.json();
   }
 
-  private getAuthToken(): string {
-    // Get token from secure storage or Redux store
-    // This should be implemented based on your auth setup
-    return '';
+  private async getAuthToken(): Promise<string | null> {
+    try {
+      return await SecureStore.getItemAsync('auth_token');
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      return null;
+    }
   }
 }
 

@@ -33,10 +33,10 @@ export class Booking {
   @Column()
   sitterId: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   startTime: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   endTime: Date;
 
   @Column({ type: 'int' })
@@ -55,8 +55,7 @@ export class Booking {
   hourlyRate: number;
 
   @Column({
-    type: 'enum',
-    enum: BookingStatus,
+    type: 'varchar',
     default: BookingStatus.PENDING,
   })
   status: BookingStatus;
@@ -88,7 +87,7 @@ export class Booking {
   @Column({ type: 'text', nullable: true })
   review: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   checkIns: {
     time: Date;
     location: {
@@ -99,14 +98,14 @@ export class Booking {
     photos: string[];
   }[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   photos: {
     url: string;
     caption: string;
     uploadedAt: Date;
   }[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   activities: {
     name: string;
     description: string;
@@ -115,7 +114,7 @@ export class Booking {
     photos: string[];
   }[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   expenses: {
     description: string;
     amount: number;
@@ -123,14 +122,14 @@ export class Booking {
     approved: boolean;
   }[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   emergencyContacts: {
     name: string;
     phone: string;
     relationship: string;
   }[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   children: {
     name: string;
     age: number;
@@ -138,7 +137,7 @@ export class Booking {
     allergies?: string[];
   }[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   requirements: {
     meals: boolean;
     transportation: boolean;
@@ -146,7 +145,7 @@ export class Booking {
     activities: string[];
   };
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   schedule: {
     arrivalTime: Date;
     departureTime: Date;
@@ -157,7 +156,7 @@ export class Booking {
     }[];
   };
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   communication: {
     messages: {
       sender: string;
@@ -172,7 +171,7 @@ export class Booking {
     }[];
   };
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   safety: {
     emergencyProcedures: string[];
     medicalInfo: {
@@ -186,7 +185,7 @@ export class Booking {
     };
   };
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   feedback: {
     parentRating: number;
     parentComment: string;
@@ -195,7 +194,7 @@ export class Booking {
     submittedAt: Date;
   };
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   payment: {
     method: string;
     status: string;
@@ -204,7 +203,7 @@ export class Booking {
     processedAt: Date;
   };
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   insurance: {
     coverage: string;
     policyNumber: string;
@@ -212,14 +211,14 @@ export class Booking {
     validUntil: Date;
   };
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   documents: {
     contract: string;
     waivers: string[];
     certificates: string[];
   };
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'text', nullable: true })
   settings: {
     notifications: {
       checkIn: boolean;
@@ -264,8 +263,8 @@ export class Booking {
   @OneToMany(() => Review, review => review.bookingId)
   reviews: Review[];
 
-  @OneToMany(() => Session, session => session.booking)
-  sessions: Session[];
+  // @OneToMany(() => Session, session => session.booking)
+  // sessions: Session[];
 
   @OneToMany(() => Message, message => message.booking)
   messages: Message[];

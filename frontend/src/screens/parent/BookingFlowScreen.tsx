@@ -3,13 +3,19 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp, SlideInRight } from 'react-native-reanimated';
+import { useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import { AnimatedButton, AnimatedCard, AnimatedProgressBar, AnimatedGradientBackground } from '../../components/AnimatedComponents';
 import FeedbackService from '../../services/feedback.service';
+import type { RootStackParamList } from '../../navigation/types';
 
 const BookingFlowScreen: React.FC = () => {
+  const route = useRoute<RouteProp<RootStackParamList, 'BookingFlow'>>();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedSitter, setSelectedSitter] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState<string | undefined>(route.params?.date);
+  const [scheduledTime, setScheduledTime] = useState<string | undefined>(route.params?.time);
   
   const feedbackService = FeedbackService.getInstance();
   
@@ -26,14 +32,47 @@ const BookingFlowScreen: React.FC = () => {
     { id: '3', name: 'Emma Rodriguez', rating: 4.7, rate: 22, specialties: ['Infants', 'Meal Prep'] },
   ];
 
+  const scheduleSlots = [
+    { id: 'slot-1', label: 'Today · 2:00 PM - 6:00 PM', date: 'Today', time: '2:00 PM - 6:00 PM' },
+    { id: 'slot-2', label: 'Tomorrow · 9:00 AM - 1:00 PM', date: 'Tomorrow', time: '9:00 AM - 1:00 PM' },
+    { id: 'slot-3', label: 'Fri · 6:00 PM - 10:00 PM', date: 'Friday', time: '6:00 PM - 10:00 PM' },
+  ];
+
   useEffect(() => {
     feedbackService.trackScreen('BookingFlowScreen');
   }, []);
+
+  useEffect(() => {
+    if (route.params?.sitterId) {
+      const match = sitters.find(sitter => sitter.id === route.params?.sitterId);
+      if (match) {
+        setSelectedSitter(match);
+      }
+    }
+  }, [route.params?.sitterId]);
+
+  useEffect(() => {
+    if (route.params?.date) {
+      setScheduledDate(route.params.date);
+    }
+    if (route.params?.time) {
+      setScheduledTime(route.params.time);
+    }
+    if (route.params?.date || route.params?.time) {
+      setCurrentStep(prev => (prev < 1 ? 1 : prev));
+    }
+  }, [route.params?.date, route.params?.time]);
 
   const handleSitterSelect = (sitter: any) => {
     setSelectedSitter(sitter);
     feedbackService.trackAction('sitter_selected', 'BookingFlowScreen', { sitterId: sitter.id });
     setTimeout(() => setCurrentStep(1), 500);
+  };
+
+  const handleSlotSelect = (slot: { id: string; date: string; time: string }) => {
+    setScheduledDate(slot.date);
+    setScheduledTime(slot.time);
+    feedbackService.trackAction('schedule_slot_selected', 'BookingFlowScreen', slot);
   };
 
   const handleNextStep = () => {
@@ -43,6 +82,32 @@ const BookingFlowScreen: React.FC = () => {
       handleCompleteBooking();
     }
   };
+
+  const renderSelectionSummary = () => (
+    <Animated.View entering={FadeInUp.delay(150)} style={styles.section}>
+      {selectedSitter && (
+        <AnimatedCard direction="up" style={styles.summaryCard}>
+          <View style={styles.summaryHeader}>
+            <View style={styles.summaryAvatar}>
+              <Ionicons name="person" size={28} color="#3A7DFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.summaryTitle}>{selectedSitter.name}</Text>
+              <Text style={styles.summarySubTitle}>${selectedSitter.rate}/hr · Rating {selectedSitter.rating}</Text>
+            </View>
+          </View>
+          <View style={styles.summaryRow}>
+            <Ionicons name="calendar" size={18} color="#6366F1" />
+            <Text style={styles.summaryText}>{scheduledDate || 'Date pending'}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Ionicons name="time" size={18} color="#6366F1" />
+            <Text style={styles.summaryText}>{scheduledTime || 'Time pending'}</Text>
+          </View>
+        </AnimatedCard>
+      )}
+    </Animated.View>
+  );
 
   const handleCompleteBooking = async () => {
     setIsProcessing(true);
@@ -127,6 +192,54 @@ const BookingFlowScreen: React.FC = () => {
     switch (currentStep) {
       case 0:
         return renderSitterSelection();
+      case 1:
+        return (
+          <Animated.View entering={FadeInUp.delay(200)} style={styles.section}>
+            <Text style={styles.sectionTitle}>Schedule Session</Text>
+            <Text style={styles.sectionDescription}>
+              Choose a preferred slot or keep the recommendation from the previous screen.
+            </Text>
+            <AnimatedCard style={styles.scheduleCard}>
+              {scheduleSlots.map((slot, index) => (
+                <TouchableOpacity
+                  key={slot.id}
+                  style={[
+                    styles.scheduleOption,
+                    scheduledDate === slot.date && scheduledTime === slot.time && styles.scheduleOptionActive,
+                  ]}
+                  onPress={() => handleSlotSelect(slot)}
+                >
+                  <Ionicons
+                    name="calendar"
+                    size={18}
+                    color={scheduledDate === slot.date && scheduledTime === slot.time ? '#FFFFFF' : '#6366F1'}
+                  />
+                  <Text
+                    style={[
+                      styles.scheduleOptionText,
+                      scheduledDate === slot.date && scheduledTime === slot.time && styles.scheduleOptionTextActive,
+                    ]}
+                  >
+                    {slot.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </AnimatedCard>
+
+            <AnimatedButton
+              title="Confirm Schedule"
+              onPress={() => {
+                if (!scheduledDate || !scheduledTime) {
+                  Alert.alert('Schedule Needed', 'Select a slot to continue.');
+                  return;
+                }
+                handleNextStep();
+              }}
+              variant="primary"
+              size="large"
+            />
+          </Animated.View>
+        );
       default:
         return (
           <Animated.View entering={FadeInUp.delay(200)} style={styles.section}>
@@ -153,6 +266,7 @@ const BookingFlowScreen: React.FC = () => {
             <Text style={styles.headerSubtitle}>{steps[currentStep]?.description}</Text>
           </Animated.View>
 
+          {renderSelectionSummary()}
           {renderStepIndicator()}
           {renderCurrentStep()}
           
@@ -181,6 +295,13 @@ const styles = StyleSheet.create({
   section: { padding: 20 },
   sectionTitle: { fontSize: 24, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 8 },
   sectionDescription: { fontSize: 16, color: '#FFFFFF', opacity: 0.8, marginBottom: 24 },
+  summaryCard: { padding: 16, marginBottom: 12 },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  summaryAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#EEF2FF', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  summaryTitle: { fontSize: 18, fontWeight: '600', color: '#1F2937' },
+  summarySubTitle: { fontSize: 14, color: '#6B7280', marginTop: 2 },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  summaryText: { marginLeft: 8, fontSize: 14, color: '#334155' },
   sitterCard: { marginBottom: 16 },
   sitterContent: { padding: 16 },
   sitterInfo: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
@@ -195,6 +316,11 @@ const styles = StyleSheet.create({
   sitterRate: { alignItems: 'flex-end' },
   rateAmount: { fontSize: 20, fontWeight: 'bold', color: '#3A7DFF' },
   rateUnit: { fontSize: 12, color: '#6B7280' },
+  scheduleCard: { padding: 16, marginBottom: 20 },
+  scheduleOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12, borderRadius: 12 },
+  scheduleOptionActive: { backgroundColor: '#3A7DFF' },
+  scheduleOptionText: { marginLeft: 12, fontSize: 14, color: '#1F2937', fontWeight: '500' },
+  scheduleOptionTextActive: { color: '#FFFFFF' },
 });
 
 export default BookingFlowScreen; 

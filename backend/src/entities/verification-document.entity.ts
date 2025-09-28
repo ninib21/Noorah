@@ -32,15 +32,13 @@ export class VerificationDocument {
   id: string;
 
   @Column({
-    type: 'enum',
-    enum: DocumentType,
+    type: 'varchar',
     default: DocumentType.OTHER,
   })
   type: DocumentType;
 
   @Column({
-    type: 'enum',
-    enum: DocumentStatus,
+    type: 'varchar',
     default: DocumentStatus.PENDING,
   })
   status: DocumentStatus;

@@ -34,11 +34,10 @@ export class SitterProfile {
   bio: string;
 
   @Column({
-    type: 'enum',
-    enum: ExperienceLevel,
-    default: ExperienceLevel.BEGINNER,
+    type: 'varchar',
+    default: 'beginner',
   })
-  experienceLevel: ExperienceLevel;
+  experienceLevel: string;
 
   @Column({ type: 'int', default: 0 })
   yearsOfExperience: number;
@@ -143,6 +142,13 @@ export class SitterProfile {
 
   @Column()
   userId: string;
+
+  // Agency relationship
+  @Column({ nullable: true })
+  agencyId?: string;
+
+  @Column({ type: 'boolean', default: true })
+  isAvailable: boolean;
 
   // Helper methods
   get completionRate(): number {

@@ -18,7 +18,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  userType: 'parent' | 'sitter' | null;
+  userType: 'parent' | 'sitter' | 'admin' | null;
   authToken: string | null;
   refreshToken: string | null;
   isOnboardingComplete: boolean;

@@ -32,15 +32,13 @@ export class Payment {
   id: string;
 
   @Column({
-    type: 'enum',
-    enum: PaymentType,
+    type: 'varchar',
     default: PaymentType.BOOKING,
   })
   type: PaymentType;
 
   @Column({
-    type: 'enum',
-    enum: PaymentStatus,
+    type: 'varchar',
     default: PaymentStatus.PENDING,
   })
   status: PaymentStatus;

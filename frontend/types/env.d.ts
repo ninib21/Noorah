@@ -21,3 +21,4 @@ declare module '@env' {
   export const EXPO_PUBLIC_ANALYTICS_ENABLED: string;
   export const EXPO_PUBLIC_ANALYTICS_API_KEY: string;
 }
+

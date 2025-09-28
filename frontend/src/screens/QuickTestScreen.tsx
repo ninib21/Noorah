@@ -95,6 +95,12 @@ const QuickTestScreen: React.FC = () => {
         { name: 'Security Demo', screen: 'SecurityDemo', icon: 'shield-checkmark', color: '#059669' },
         { name: 'Session Monitoring', screen: 'SessionMonitoring', icon: 'eye', color: '#7C3AED' },
       ]
+    },
+    {
+      title: 'Backend Integration',
+      tests: [
+        { name: 'Backend Test', screen: 'BackendTest', icon: 'server', color: '#10B981' },
+      ]
     }
   ];
 
@@ -314,3 +320,4 @@ const styles = StyleSheet.create({
 });
 
 export default QuickTestScreen;
+

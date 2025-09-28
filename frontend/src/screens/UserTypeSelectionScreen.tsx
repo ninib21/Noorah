@@ -31,7 +31,7 @@ const UserTypeSelectionScreen: React.FC = () => {
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.title}>Choose Your Role</Text>
-          <Text style={styles.subtitle}>How would you like to use NannyRadar?</Text>
+          <Text style={styles.subtitle}>How would you like to use Noorah?</Text>
         </View>
 
         {/* User Type Cards */}

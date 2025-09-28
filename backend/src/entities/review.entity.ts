@@ -22,8 +22,7 @@ export class Review {
   id: string;
 
   @Column({
-    type: 'enum',
-    enum: ReviewType,
+    type: 'varchar',
     default: ReviewType.PARENT_TO_SITTER,
   })
   type: ReviewType;

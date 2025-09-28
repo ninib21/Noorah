@@ -66,28 +66,24 @@ export class Notification {
   id: string;
 
   @Column({
-    type: 'enum',
-    enum: NotificationType,
+    type: 'varchar',
   })
-  type: NotificationType;
+  type: string;
 
   @Column({
-    type: 'enum',
-    enum: NotificationPriority,
+    type: 'varchar',
     default: NotificationPriority.NORMAL,
   })
   priority: NotificationPriority;
 
   @Column({
-    type: 'enum',
-    enum: NotificationStatus,
+    type: 'varchar',
     default: NotificationStatus.PENDING,
   })
   status: NotificationStatus;
 
   @Column({
-    type: 'enum',
-    enum: NotificationChannel,
+    type: 'varchar',
     default: NotificationChannel.PUSH,
   })
   channel: NotificationChannel;
@@ -243,35 +239,35 @@ export class Notification {
   }
 
   get isSOS(): boolean {
-    return this.type === NotificationType.SOS_ALERT;
+    return this.type === 'sos_alert';
   }
 
   get isEmergency(): boolean {
-    return this.type === NotificationType.EMERGENCY_ALERT;
+    return this.type === 'emergency_alert';
   }
 
   get isBookingRelated(): boolean {
     return [
-      NotificationType.BOOKING_REQUEST,
-      NotificationType.BOOKING_CONFIRMED,
-      NotificationType.BOOKING_CANCELLED,
-      NotificationType.BOOKING_STARTED,
-      NotificationType.BOOKING_COMPLETED,
+      'booking_request',
+      'booking_confirmed',
+      'booking_cancelled',
+      'booking_started',
+      'booking_completed',
     ].includes(this.type);
   }
 
   get isPaymentRelated(): boolean {
     return [
-      NotificationType.PAYMENT_RECEIVED,
-      NotificationType.PAYMENT_PROCESSED,
-      NotificationType.PAYMENT_FAILED,
+      'payment_received',
+      'payment_processed',
+      'payment_failed',
     ].includes(this.type);
   }
 
   get isVerificationRelated(): boolean {
     return [
-      NotificationType.VERIFICATION_APPROVED,
-      NotificationType.VERIFICATION_REJECTED,
+      'verification_approved',
+      'verification_rejected',
     ].includes(this.type);
   }
 

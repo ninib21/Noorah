@@ -68,7 +68,10 @@ export class SecurityGuard implements CanActivate {
         context.getClass(),
       ]);
 
-      if (!isPublic && !token) {
+      // Allow root routes without authentication
+      const isRootRoute = request.path === '/' || request.path === '/status';
+
+      if (!isPublic && !token && !isRootRoute) {
         throw new UnauthorizedException('Authentication required');
       }
 
@@ -331,3 +334,4 @@ import { SetMetadata } from '@nestjs/common';
 
 export const IS_PUBLIC_KEY = 'isPublic';
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
+

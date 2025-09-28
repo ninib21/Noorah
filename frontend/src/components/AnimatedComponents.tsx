@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Dimensions, ColorValue, StyleProp, ViewStyle } from 'react-native';
+import { theme } from '../styles/theme';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -40,6 +41,7 @@ export const AnimatedButton: React.FC<{
   disabled?: boolean;
   loading?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
+  style?: StyleProp<ViewStyle>;
 }> = ({ 
   title, 
   onPress, 
@@ -47,7 +49,8 @@ export const AnimatedButton: React.FC<{
   size = 'medium', 
   disabled = false, 
   loading = false,
-  icon 
+  icon, 
+  style,
 }) => {
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
@@ -88,11 +91,11 @@ export const AnimatedButton: React.FC<{
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       flexDirection: 'row' as const,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+      shadowColor: theme.shadows.sm.shadowColor,
+      shadowOffset: theme.shadows.sm.shadowOffset,
+      shadowOpacity: theme.shadows.sm.shadowOpacity,
+      shadowRadius: theme.shadows.sm.shadowRadius,
+      elevation: theme.shadows.sm.elevation,
     };
 
     const sizeStyles = {
@@ -102,10 +105,10 @@ export const AnimatedButton: React.FC<{
     };
 
     const variantStyles = {
-      primary: { backgroundColor: '#3A7DFF' },
-      secondary: { backgroundColor: '#F3F4F6' },
-      danger: { backgroundColor: '#EF4444' },
-      success: { backgroundColor: '#10B981' },
+      primary: { backgroundColor: theme.colors.primary },
+      secondary: { backgroundColor: theme.colors.secondary },
+      danger: { backgroundColor: theme.colors.error },
+      success: { backgroundColor: theme.colors.success },
     };
 
     return { ...baseStyle, ...sizeStyles[size], ...variantStyles[variant] };
@@ -124,10 +127,10 @@ export const AnimatedButton: React.FC<{
     };
 
     const variantStyles = {
-      primary: { color: '#FFFFFF' },
-      secondary: { color: '#374151' },
-      danger: { color: '#FFFFFF' },
-      success: { color: '#FFFFFF' },
+      primary: { color: theme.colors.white },
+      secondary: { color: theme.colors.textPrimary },
+      danger: { color: theme.colors.white },
+      success: { color: theme.colors.white },
     };
 
     return { ...baseStyle, ...sizeStyles[size], ...variantStyles[variant] };
@@ -136,7 +139,7 @@ export const AnimatedButton: React.FC<{
   return (
     <Animated.View style={animatedStyle}>
       <TouchableOpacity
-        style={getButtonStyle()}
+        style={[getButtonStyle(), style]}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={handlePress}
@@ -145,14 +148,14 @@ export const AnimatedButton: React.FC<{
       >
         {loading && (
           <Animated.View style={{ marginRight: 8 }}>
-            <Ionicons name="refresh" size={20} color="#FFFFFF" />
+            <Ionicons name="refresh" size={20} color={theme.colors.white} />
           </Animated.View>
         )}
         {icon && !loading && (
           <Ionicons 
             name={icon} 
             size={size === 'small' ? 16 : size === 'medium' ? 20 : 24} 
-            color={variant === 'secondary' ? '#374151' : '#FFFFFF'} 
+            color={variant === 'secondary' ? theme.colors.textPrimary : theme.colors.white} 
             style={{ marginRight: 8 }}
           />
         )}
@@ -168,7 +171,8 @@ export const AnimatedCard: React.FC<{
   onPress?: () => void;
   delay?: number;
   direction?: 'up' | 'down' | 'left' | 'right';
-}> = ({ children, onPress, delay = 0, direction = 'up' }) => {
+  style?: StyleProp<ViewStyle>;
+}> = ({ children, onPress, delay = 0, direction = 'up', style }) => {
   const enteringAnimation = {
     up: FadeInUp.delay(delay),
     down: FadeInDown.delay(delay),
@@ -181,17 +185,22 @@ export const AnimatedCard: React.FC<{
   return (
     <Animated.View
       entering={enteringAnimation[direction]}
-      style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 16,
-        marginVertical: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 5,
-      }}
+      style={[
+        {
+          backgroundColor: theme.colors.surface,
+          borderRadius: theme.borderRadius.lg,
+          padding: theme.spacing.lg,
+          marginVertical: theme.spacing.sm,
+          borderWidth: 1,
+          borderColor: 'rgba(148, 163, 184, 0.16)',
+          shadowColor: theme.shadows.sm.shadowColor,
+          shadowOffset: theme.shadows.sm.shadowOffset,
+          shadowOpacity: theme.shadows.sm.shadowOpacity,
+          shadowRadius: theme.shadows.sm.shadowRadius,
+          elevation: theme.shadows.sm.elevation,
+        },
+        style,
+      ]}
     >
       <CardComponent onPress={onPress} activeOpacity={0.8}>
         {children}
@@ -210,8 +219,8 @@ export const AnimatedProgressBar: React.FC<{
 }> = ({ 
   progress, 
   height = 8, 
-  backgroundColor = '#E5E7EB', 
-  progressColor = '#3A7DFF',
+  backgroundColor = 'rgba(148, 163, 184, 0.15)', 
+  progressColor = theme.colors.primary,
   animated = true 
 }) => {
   const progressWidth = useSharedValue(0);
@@ -259,7 +268,7 @@ export const AnimatedSpinner: React.FC<{
   size?: number;
   color?: string;
   strokeWidth?: number;
-}> = ({ size = 24, color = '#3A7DFF', strokeWidth = 3 }) => {
+}> = ({ size = 24, color = theme.colors.secondary, strokeWidth = 3 }) => {
   const rotation = useSharedValue(0);
 
   useEffect(() => {
@@ -282,7 +291,7 @@ export const AnimatedSpinner: React.FC<{
           height: size,
           borderRadius: size / 2,
           borderWidth: strokeWidth,
-          borderColor: `${color}20`,
+          borderColor: `${color}33`,
           borderTopColor: color,
         }}
       />
@@ -296,7 +305,7 @@ export const AnimatedFAB: React.FC<{
   onPress: () => void;
   color?: string;
   size?: number;
-}> = ({ icon, onPress, color = '#3A7DFF', size = 56 }) => {
+}> = ({ icon, onPress, color = theme.colors.accent, size = 56 }) => {
   const scale = useSharedValue(1);
   const rotation = useSharedValue(0);
 
@@ -329,7 +338,7 @@ export const AnimatedFAB: React.FC<{
           backgroundColor: color,
           alignItems: 'center',
           justifyContent: 'center',
-          shadowColor: '#000',
+          shadowColor: theme.shadows.glow.shadowColor,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius: 8,
@@ -339,8 +348,8 @@ export const AnimatedFAB: React.FC<{
         onPressOut={handlePressOut}
         onPress={onPress}
         activeOpacity={0.8}
-      >
-        <Ionicons name={icon} size={size * 0.4} color="#FFFFFF" />
+        >
+          <Ionicons name={icon} size={size * 0.4} color={theme.colors.white} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -370,9 +379,9 @@ export const AnimatedTabBar: React.FC<{
     <View
       style={{
         flexDirection: 'row',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.colors.surface,
         borderTopWidth: 1,
-        borderTopColor: '#E5E7EB',
+        borderTopColor: 'rgba(148, 163, 184, 0.18)',
         paddingBottom: 20,
         paddingTop: 10,
       }}
@@ -387,22 +396,22 @@ export const AnimatedTabBar: React.FC<{
           }}
           onPress={() => onTabPress(tab.key)}
           activeOpacity={0.7}
-        >
-          <Ionicons
-            name={tab.icon}
-            size={24}
-            color={activeTab === tab.key ? '#3A7DFF' : '#9CA3AF'}
-          />
-          <Text
-            style={{
-              fontSize: 12,
-              marginTop: 4,
-              color: activeTab === tab.key ? '#3A7DFF' : '#9CA3AF',
-              fontWeight: activeTab === tab.key ? '600' : '400',
-            }}
           >
-            {tab.title}
-          </Text>
+            <Ionicons
+              name={tab.icon}
+              size={24}
+              color={activeTab === tab.key ? theme.colors.primary : theme.colors.textMuted}
+            />
+            <Text
+              style={{
+                fontSize: 12,
+                marginTop: 4,
+                color: activeTab === tab.key ? theme.colors.primary : theme.colors.textMuted,
+                fontWeight: activeTab === tab.key ? '600' : '400',
+              }}
+            >
+              {tab.title}
+            </Text>
         </TouchableOpacity>
       ))}
       <Animated.View
@@ -412,7 +421,7 @@ export const AnimatedTabBar: React.FC<{
             top: 0,
             width: screenWidth / tabs.length,
             height: 3,
-            backgroundColor: '#3A7DFF',
+            backgroundColor: theme.colors.accent,
             borderRadius: 2,
           },
           indicatorStyle,
@@ -425,11 +434,20 @@ export const AnimatedTabBar: React.FC<{
 // 🎯 Animated Notification Badge
 export const AnimatedNotificationBadge: React.FC<{
   count: number;
-  size?: number;
+  size?: number | 'small' | 'medium' | 'large';
   color?: string;
-}> = ({ count, size = 20, color = '#EF4444' }) => {
+  style?: StyleProp<ViewStyle>;
+}> = ({ count, size = 20, color = theme.colors.error, style }) => {
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
+
+  const resolvedSize = typeof size === 'number'
+    ? size
+    : size === 'small'
+      ? 16
+      : size === 'large'
+        ? 24
+        : 20;
 
   useEffect(() => {
     if (count > 0) {
@@ -458,22 +476,23 @@ export const AnimatedNotificationBadge: React.FC<{
           position: 'absolute',
           top: -5,
           right: -5,
-          minWidth: size,
-          height: size,
-          borderRadius: size / 2,
+          minWidth: resolvedSize,
+          height: resolvedSize,
+          borderRadius: resolvedSize / 2,
           backgroundColor: color,
           alignItems: 'center',
           justifyContent: 'center',
           paddingHorizontal: 4,
         },
         animatedStyle,
+        style,
       ]}
     >
       <Text
         style={{
-          color: '#FFFFFF',
+          color: theme.colors.white,
           fontSize: 10,
-          fontWeight: '600',
+          fontWeight: theme.typography.fontWeight.bold,
         }}
       >
         {count > 99 ? '99+' : count.toString()}
@@ -544,7 +563,8 @@ export const AnimatedPulse: React.FC<{
   children: React.ReactNode;
   duration?: number;
   scale?: number;
-}> = ({ children, duration = 2000, scale = 1.1 }) => {
+  style?: StyleProp<ViewStyle>;
+}> = ({ children, duration = 2000, scale = 1.1, style }) => {
   const pulseScale = useSharedValue(1);
 
   useEffect(() => {
@@ -562,7 +582,7 @@ export const AnimatedPulse: React.FC<{
     transform: [{ scale: pulseScale.value }],
   }));
 
-  return <Animated.View style={animatedStyle}>{children}</Animated.View>;
+  return <Animated.View style={[animatedStyle, style]}>{children}</Animated.View>;
 };
 
 // 🎯 Animated Shake Effect
@@ -610,7 +630,7 @@ export const AnimatedCounter: React.FC<{
 
   return (
     <Animated.Text style={style}>
-      {animatedText}
+      {animatedText.value}
     </Animated.Text>
   );
 };
@@ -618,12 +638,12 @@ export const AnimatedCounter: React.FC<{
 // 🎯 Animated Gradient Background
 export const AnimatedGradientBackground: React.FC<{
   children: React.ReactNode;
-  colors?: string[];
+  colors?: readonly [ColorValue, ColorValue, ...ColorValue[]];
   start?: { x: number; y: number };
   end?: { x: number; y: number };
 }> = ({ 
   children, 
-  colors = ['#3A7DFF', '#FF7DB9'], 
+  colors = theme.colors.gradientAurora, 
   start = { x: 0, y: 0 }, 
   end = { x: 1, y: 1 } 
 }) => {
@@ -651,6 +671,7 @@ export const AnimatedGradientBackground: React.FC<{
   );
 };
 
+
 export default {
   AnimatedButton,
   AnimatedCard,
@@ -665,3 +686,4 @@ export default {
   AnimatedCounter,
   AnimatedGradientBackground,
 }; 
+
