@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,21 +7,21 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  FlatList,
   Alert,
-  Dimensions,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import type { RootStackParamList } from '../../navigation/types';
-import Button from '../../components/Button';
 
-const { width } = Dimensions.get('window');
+import Button from '../../components/Button';
+import { NeonBackground } from '../../components/ui/NeonBackground';
+import { GlassCard } from '../../components/ui/GlassCard';
+import { AnimatedCard } from '../../components/AnimatedComponents';
+import type { RootStackParamList } from '../../navigation/types';
+import { theme } from '../../styles/theme';
 
 interface Sitter {
   id: string;
@@ -31,125 +31,74 @@ interface Sitter {
   hourlyRate: number;
   experience: string;
   location: string;
-  availability: string[];
   skills: string[];
   verified: boolean;
-  reviews: number;
 }
 
-const ParentBookScreen: React.FC = () => {
+export const ParentBookScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'ParentBook'>>();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDateValue, setSelectedDateValue] = useState<Date | null>(null);
-  const [selectedTimeValue, setSelectedTimeValue] = useState<Date | null>(null);
-  const [selectedDuration, setSelectedDuration] = useState(2);
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [sitters, setSitters] = useState<Sitter[]>([]);
-  const [filteredSitters, setFilteredSitters] = useState<Sitter[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<Date | null>(null);
+  const [duration, setDuration] = useState(3);
+  const [selectedFilters, setSelectedFilters] = useState<string[]>(['Verified']);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | null>(null);
-  const [pickerTempValue, setPickerTempValue] = useState<Date>(new Date());
+  const [pickerValue, setPickerValue] = useState<Date>(new Date());
 
-  // Mock data
-  useEffect(() => {
-    const mockSitters: Sitter[] = [
+  const sitters = useMemo<Sitter[]>(
+    () => [
       {
         id: '1',
         name: 'Sarah Johnson',
-        avatar: 'https://via.placeholder.com/60',
+        avatar: 'https://i.pravatar.cc/120?img=48',
         rating: 4.8,
         hourlyRate: 25,
         experience: '5 years',
-        location: 'Downtown',
-        availability: ['Mon', 'Wed', 'Fri'],
-        skills: ['Infant Care', 'CPR Certified', 'First Aid'],
+        location: 'Aurora District',
+        skills: ['Infant Care', 'CPR Certified', 'First Aid', 'Night Routine'],
         verified: true,
-        reviews: 127,
       },
       {
         id: '2',
         name: 'Emily Chen',
-        avatar: 'https://via.placeholder.com/60',
+        avatar: 'https://i.pravatar.cc/120?img=38',
         rating: 4.9,
         hourlyRate: 30,
         experience: '3 years',
-        location: 'Midtown',
-        availability: ['Tue', 'Thu', 'Sat'],
-        skills: ['Special Needs', 'Early Education', 'Bilingual'],
+        location: 'Nebula Heights',
+        skills: ['Special Needs', 'STEM Play', 'Bilingual'],
         verified: true,
-        reviews: 89,
       },
       {
         id: '3',
         name: 'Maria Rodriguez',
-        avatar: 'https://via.placeholder.com/60',
+        avatar: 'https://i.pravatar.cc/120?img=21',
         rating: 4.7,
         hourlyRate: 22,
         experience: '7 years',
-        location: 'Uptown',
-        availability: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-        skills: ['Infant Care', 'Meal Prep', 'Housekeeping'],
+        location: 'Cosmic Gardens',
+        skills: ['Infant Care', 'Meal Prep', 'Homework'],
         verified: true,
-        reviews: 203,
       },
-    ];
-    setSitters(mockSitters);
-    setFilteredSitters(mockSitters);
-  }, []);
+    ],
+    [],
+  );
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
+  const filters = ['Verified', 'Infant Care', 'Special Needs', 'Bilingual', 'Homework'];
 
   const handleFilterToggle = (filter: string) => {
-    const updatedFilters = selectedFilters.includes(filter)
-      ? selectedFilters.filter(f => f !== filter)
-      : [...selectedFilters, filter];
-    setSelectedFilters(updatedFilters);
+    setSelectedFilters(prev =>
+      prev.includes(filter)
+        ? prev.filter(item => item !== filter)
+        : [...prev, filter]
+    );
   };
-
-  useEffect(() => {
-    const filtered = sitters.filter(sitter => {
-      const matchesQuery = !searchQuery ||
-        sitter.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sitter.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sitter.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
-
-      const matchesFilters = selectedFilters.length === 0 || selectedFilters.every(filter =>
-        filter === 'Verified'
-          ? sitter.verified
-          : sitter.skills.some(skill => skill.toLowerCase().includes(filter.toLowerCase()))
-      );
-
-      return matchesQuery && matchesFilters;
-    });
-
-    setFilteredSitters(filtered);
-  }, [searchQuery, selectedFilters, sitters]);
-
-  const formatDate = (date: Date) =>
-    date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-    });
-
-  const formatTime = (date: Date) =>
-    date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-
-  const formattedDate = selectedDateValue ? formatDate(selectedDateValue) : '';
-  const formattedTime = selectedTimeValue ? formatTime(selectedTimeValue) : '';
 
   const openPicker = (mode: 'date' | 'time') => {
     setPickerMode(mode);
-    const baseValue =
-      mode === 'date'
-        ? selectedDateValue ?? new Date()
-        : selectedTimeValue ?? selectedDateValue ?? new Date();
-    setPickerTempValue(baseValue);
+    const base = mode === 'date' ? selectedDate ?? new Date() : selectedTime ?? selectedDate ?? new Date();
+    setPickerValue(base);
     setPickerVisible(true);
   };
 
@@ -158,34 +107,46 @@ const ParentBookScreen: React.FC = () => {
     setPickerMode(null);
   };
 
-  const handlePickerChange = (_: any, nextValue?: Date) => {
-    if (nextValue) {
-      setPickerTempValue(nextValue);
-    }
-  };
-
-  const handlePickerConfirm = () => {
+  const confirmPicker = () => {
     if (pickerMode === 'date') {
-      setSelectedDateValue(pickerTempValue);
-      if (!selectedTimeValue) {
-        setSelectedTimeValue(pickerTempValue);
-      }
+      setSelectedDate(pickerValue);
+      if (!selectedTime) setSelectedTime(pickerValue);
     } else if (pickerMode === 'time') {
-      setSelectedTimeValue(pickerTempValue);
+      setSelectedTime(pickerValue);
     }
     closePicker();
   };
 
+  const formattedDate = selectedDate
+    ? selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+    : '';
+
+  const formattedTime = selectedTime
+    ? selectedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    : '';
+
+  const filteredSitters = sitters.filter(sitter => {
+    const matchesQuery = !searchQuery ||
+      sitter.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sitter.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sitter.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesFilters = selectedFilters.length === 0 || selectedFilters.every(filter =>
+      filter === 'Verified'
+        ? sitter.verified
+        : sitter.skills.some(skill => skill.toLowerCase().includes(filter.toLowerCase()))
+    );
+
+    return matchesQuery && matchesFilters;
+  });
+
   const handleBookSitter = (sitter: Sitter) => {
-    if (!selectedDateValue || !selectedTimeValue) {
+    if (!selectedDate || !selectedTime) {
       Alert.alert('Select Date & Time', 'Choose when you need care to continue booking.');
-      if (!selectedDateValue) {
-        openPicker('date');
-      } else {
-        openPicker('time');
-      }
+      openPicker(selectedDate ? 'time' : 'date');
       return;
     }
+
     const dateDisplay = formattedDate;
     const timeDisplay = formattedTime;
 
@@ -195,552 +156,402 @@ const ParentBookScreen: React.FC = () => {
       time: timeDisplay,
     });
 
-    Alert.alert('Booking Created', `Booking ${sitter.name} for ${dateDisplay} at ${timeDisplay}`);
+    Alert.alert('Quantum Booking Created', `${sitter.name} reserved for ${dateDisplay} - ${timeDisplay}`);
   };
 
-  const renderSitterCard = ({ item }: { item: Sitter }) => (
-    <View style={styles.sitterCard}>
-      <View style={styles.sitterHeader}>
-        <Image source={{ uri: item.avatar }} style={styles.sitterAvatar} />
-        <View style={styles.sitterInfo}>
-          <View style={styles.sitterNameRow}>
-            <Text style={styles.sitterName}>{item.name}</Text>
-            {item.verified && (
-              <Ionicons name="checkmark-circle" size={16} color="#3A7DFF" />
-            )}
-          </View>
-          <View style={styles.ratingRow}>
-            <Ionicons name="star" size={14} color="#FFD700" />
-            <Text style={styles.ratingText}>{item.rating}</Text>
-            <Text style={styles.reviewsText}>({item.reviews} reviews)</Text>
-          </View>
-          <Text style={styles.sitterLocation}>{item.location}</Text>
-        </View>
-        <View style={styles.rateContainer}>
-          <Text style={styles.rateText}>${item.hourlyRate}</Text>
-          <Text style={styles.rateLabel}>/hour</Text>
-        </View>
-      </View>
-
-      <View style={styles.sitterDetails}>
-        <View style={styles.detailRow}>
-          <Ionicons name="time" size={14} color="#64748B" />
-          <Text style={styles.detailText}>{item.experience} experience</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Ionicons name="calendar" size={14} color="#64748B" />
-          <Text style={styles.detailText}>Available: {item.availability.join(', ')}</Text>
-        </View>
-      </View>
-
-      <View style={styles.skillsContainer}>
-        {item.skills.slice(0, 3).map((skill, index) => (
-          <View key={index} style={styles.skillTag}>
-            <Text style={styles.skillText}>{skill}</Text>
-          </View>
-        ))}
-        {item.skills.length > 3 && (
-          <Text style={styles.moreSkillsText}>+{item.skills.length - 3} more</Text>
-        )}
-      </View>
-
-      <TouchableOpacity
-        style={styles.bookButton}
-        onPress={() => handleBookSitter(item)}
-      >
-        <Text style={styles.bookButtonText}>Book Now</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#3A7DFF', '#FF7DB9']}
-        style={styles.gradient}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Find a Sitter</Text>
-          <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="filter" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+    <NeonBackground>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={22} color={theme.colors.white} />
+              <Text style={styles.backText}>Back</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Find a Sitter</Text>
+            <TouchableOpacity onPress={() => Alert.alert('Filters', 'Advanced filters coming soon.')} style={styles.filterButton}>
+              <Ionicons name="settings-outline" size={22} color={theme.colors.white} />
+            </TouchableOpacity>
+          </View>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <View style={styles.searchInputContainer}>
-              <Ionicons name="search" size={20} color="#64748B" />
+          <GlassCard style={styles.searchCard}>
+            <View style={styles.searchInputWrap}>
+              <Ionicons name="search" size={20} color="rgba(255,255,255,0.6)" />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Search sitters, skills, or location..."
-                placeholderTextColor="#64748B"
+                placeholder="Search sitter, skill, or constellation..."
+                placeholderTextColor="rgba(226,232,240,0.5)"
                 value={searchQuery}
-                onChangeText={handleSearch}
+                onChangeText={setSearchQuery}
               />
             </View>
-          </View>
+            <Text style={styles.searchHelper}>Try "STEM play" - "Evening" - "Bilingual"</Text>
+          </GlassCard>
 
-          {/* Date and Time Selection */}
-          <View style={styles.selectionContainer}>
-            <Text style={styles.sectionTitle}>When do you need care?</Text>
-            
-            <View style={styles.dateTimeRow}>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => openPicker('date')}
-              >
-                <Ionicons name="calendar" size={20} color="#3A7DFF" />
-                <Text style={styles.dateButtonText}>
-                  {formattedDate || 'Select Date'}
-                </Text>
+          <GlassCard intensity="bold" style={styles.scheduleCard}>
+            <Text style={styles.sectionTitle}>Schedule Session</Text>
+            <View style={styles.scheduleRow}>
+              <TouchableOpacity style={styles.scheduleSelector} onPress={() => openPicker('date')}>
+                <Ionicons name="calendar" size={20} color={theme.colors.white} />
+                <Text style={styles.selectorLabel}>{formattedDate || 'Select Date'}</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.timeButton}
-                onPress={() => openPicker('time')}
-              >
-                <Ionicons name="time" size={20} color="#3A7DFF" />
-                <Text style={styles.timeButtonText}>
-                  {formattedTime || 'Select Time'}
-                </Text>
+              <TouchableOpacity style={styles.scheduleSelector} onPress={() => openPicker('time')}>
+                <Ionicons name="time" size={20} color={theme.colors.white} />
+                <Text style={styles.selectorLabel}>{formattedTime || 'Select Time'}</Text>
               </TouchableOpacity>
             </View>
-
-            <View style={styles.durationContainer}>
-              <Text style={styles.durationLabel}>Duration: {selectedDuration} hours</Text>
-              <View style={styles.durationSlider}>
-                {[2, 3, 4, 5, 6].map(hours => (
-                  <TouchableOpacity
-                    key={hours}
-                    style={[
-                      styles.durationButton,
-                      selectedDuration === hours && styles.durationButtonActive,
-                    ]}
-                    onPress={() => setSelectedDuration(hours)}
-                  >
-                    <Text
-                      style={[
-                        styles.durationButtonText,
-                        selectedDuration === hours && styles.durationButtonTextActive,
-                      ]}
-                    >
-                      {hours}h
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+            <View style={styles.durationRow}>
+              {[2, 3, 4, 5].map(hours => (
+                <TouchableOpacity
+                  key={hours}
+                  style={[styles.durationChip, duration === hours && styles.durationChipActive]}
+                  onPress={() => setDuration(hours)}
+                >
+                  <Text style={[styles.durationText, duration === hours && styles.durationTextActive]}>{hours}h</Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          </View>
+          </GlassCard>
 
-          {/* Filters */}
-          <View style={styles.filtersContainer}>
-            <Text style={styles.sectionTitle}>Filters</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {['CPR Certified', 'First Aid', 'Infant Care', 'Special Needs', 'Bilingual'].map(filter => (
+          <GlassCard style={styles.filterCard}>
+            <Text style={styles.sectionTitle}>Enhance Matching</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+              {filters.map(filter => (
                 <TouchableOpacity
                   key={filter}
-                  style={[
-                    styles.filterTag,
-                    selectedFilters.includes(filter) && styles.filterTagActive,
-                  ]}
+                  style={[styles.filterChip, selectedFilters.includes(filter) && styles.filterChipActive]}
                   onPress={() => handleFilterToggle(filter)}
                 >
-                  <Text
-                    style={[
-                      styles.filterTagText,
-                      selectedFilters.includes(filter) && styles.filterTagTextActive,
-                    ]}
-                  >
-                    {filter}
-                  </Text>
+                  <Text style={[styles.filterText, selectedFilters.includes(filter) && styles.filterTextActive]}>{filter}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
+          </GlassCard>
+
+          <View style={styles.listHeader}>
+            <Text style={styles.sectionTitle}>Available Sitters</Text>
+            <Text style={styles.sectionMeta}>{filteredSitters.length} cosmic matches</Text>
           </View>
 
-          {/* Sitters List */}
-          <View style={styles.sittersContainer}>
-            <Text style={styles.sectionTitle}>
-              Available Sitters ({filteredSitters.length})
-            </Text>
-            <FlatList
-              data={filteredSitters}
-              renderItem={renderSitterCard}
-              keyExtractor={item => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
+          <View style={styles.listContainer}>
+            {filteredSitters.map((sitter, index) => (
+              <AnimatedCard key={sitter.id} direction="up" delay={index * 80}>
+                <GlassCard style={styles.sitterCard}>
+                  <View style={styles.sitterHeader}>
+                    <Image source={{ uri: sitter.avatar }} style={styles.sitterAvatar} />
+                    <View style={styles.sitterInfo}>
+                      <View style={styles.sitterTopRow}>
+                        <Text style={styles.sitterName}>{sitter.name}</Text>
+                        {sitter.verified && (
+                          <Ionicons name="shield-checkmark" size={18} color={theme.colors.accent} />
+                        )}
+                      </View>
+                      <View style={styles.ratingRow}>
+                        <Ionicons name="star" size={16} color="#FBBF24" />
+                        <Text style={styles.ratingText}>{sitter.rating} - {sitter.experience}</Text>
+                      </View>
+                      <Text style={styles.locationText}>{sitter.location}</Text>
+                    </View>
+                    <View style={styles.rateBubble}>
+                      <Text style={styles.rateAmount}>${sitter.hourlyRate}</Text>
+                      <Text style={styles.rateUnit}>/hr</Text>
+                    </View>
+                  </View>
+                  <View style={styles.skillRow}>
+                    {sitter.skills.slice(0, 3).map(skill => (
+                      <View key={skill} style={styles.skillChip}>
+                        <Text style={styles.skillText}>{skill}</Text>
+                      </View>
+                    ))}
+                    {sitter.skills.length > 3 && (
+                      <Text style={styles.moreSkills}>+{sitter.skills.length - 3} more</Text>
+                    )}
+                  </View>
+                  <Button title="Book Now" variant="primary" size="medium" onPress={() => handleBookSitter(sitter)} />
+                </GlassCard>
+              </AnimatedCard>
+            ))}
           </View>
 
-          <View style={styles.backButtonContainer}>
-            <Button
-              title="Back"
-              variant="outline"
-              size="medium"
-              onPress={() => navigation.goBack()}
-            />
+          <View style={styles.backRow}>
+            <Button title="Back" variant="outline" size="medium" onPress={() => navigation.goBack()} />
           </View>
         </ScrollView>
-      </LinearGradient>
-      <Modal
-        transparent
-        visible={pickerVisible}
-        animationType="fade"
-        onRequestClose={closePicker}
-      >
-        <View style={styles.pickerOverlay}>
-          <View style={styles.pickerCard}>
-            <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>
-                {pickerMode === 'time' ? 'Select Time' : 'Select Date'}
-              </Text>
-              <TouchableOpacity onPress={closePicker}>
-                <Ionicons name="close" size={22} color="#94A3B8" />
-              </TouchableOpacity>
-            </View>
-            {pickerMode && (
-              <DateTimePicker
-                value={pickerTempValue}
-                mode={pickerMode}
-                display="spinner"
-                onChange={handlePickerChange}
-              />
-            )}
-            <View style={styles.pickerActions}>
-              <Button title="Confirm" variant="primary" size="medium" onPress={handlePickerConfirm} />
+
+        <Modal
+          visible={pickerVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={closePicker}
+        >
+          <View style={styles.pickerOverlay}>
+            <View style={styles.pickerCard}>
+              <View style={styles.pickerHeader}>
+                <Text style={styles.pickerTitle}>{pickerMode === 'time' ? 'Select Time' : 'Select Date'}</Text>
+                <TouchableOpacity onPress={closePicker}>
+                  <Ionicons name="close" size={22} color="#94A3B8" />
+                </TouchableOpacity>
+              </View>
+              {pickerMode && (
+                <DateTimePicker
+                  value={pickerValue}
+                  mode={pickerMode}
+                  display="spinner"
+                  onChange={(_, date) => date && setPickerValue(date)}
+                />
+              )}
+              <View style={styles.pickerActions}>
+                <Button title="Confirm" variant="primary" size="medium" onPress={confirmPicker} />
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
+    </NeonBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
   },
-  gradient: {
-    flex: 1,
+  scrollContent: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing['2xl'],
+    paddingBottom: theme.spacing['3xl'],
+    gap: theme.spacing['2xl'],
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
   },
   backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  filterButton: {
-    padding: 8,
-  },
-  content: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  searchContainer: {
-    padding: 20,
-  },
-  searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    gap: theme.spacing.xs,
+  },
+  backText: {
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  headerTitle: {
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.white,
+  },
+  filterButton: {
+    padding: theme.spacing.xs,
+  },
+  searchCard: {
+    gap: theme.spacing.sm,
+  },
+  searchInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#1E293B',
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSize.base,
   },
-  selectionContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+  searchHelper: {
+    fontSize: theme.typography.fontSize.xs,
+    color: 'rgba(226,232,240,0.6)',
+  },
+  scheduleCard: {
+    gap: theme.spacing.lg,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1E293B',
-    marginBottom: 16,
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.white,
   },
-  dateTimeRow: {
+  scheduleRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
+    gap: theme.spacing.md,
   },
-  dateButton: {
+  scheduleSelector: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginRight: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    gap: theme.spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
   },
-  timeButton: {
-    flex: 1,
+  selectorLabel: {
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSize.base,
+  },
+  durationRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginLeft: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    gap: theme.spacing.sm,
   },
-  dateButtonText: {
-    marginLeft: 8,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1E293B',
-  },
-  timeButtonText: {
-    marginLeft: 8,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1E293B',
-  },
-  durationContainer: {
-    marginBottom: 20,
-  },
-  durationLabel: {
-    fontSize: 14,
-    color: '#64748B',
-    marginBottom: 12,
-  },
-  durationSlider: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  durationButton: {
+  durationChip: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    borderRadius: theme.borderRadius.md,
     paddingVertical: 12,
-    paddingHorizontal: 8,
-    marginHorizontal: 4,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(148,163,184,0.3)',
   },
-  durationButtonActive: {
-    backgroundColor: '#3A7DFF',
-    borderColor: '#3A7DFF',
+  durationChipActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
-  durationButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#64748B',
+  durationText: {
+    color: 'rgba(226,232,240,0.75)',
+    fontSize: theme.typography.fontSize.base,
   },
-  durationButtonTextActive: {
-    color: '#FFFFFF',
+  durationTextActive: {
+    color: theme.colors.white,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
-  filtersContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+  filterCard: {
+    gap: theme.spacing.md,
   },
-  backButtonContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+  filterRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  filterChip: {
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(148,163,184,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  filterChipActive: {
+    backgroundColor: theme.colors.accent,
+    borderColor: theme.colors.accent,
+  },
+  filterText: {
+    color: 'rgba(226,232,240,0.75)',
+    fontSize: theme.typography.fontSize.sm,
+  },
+  filterTextActive: {
+    color: theme.colors.white,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionMeta: {
+    color: 'rgba(226,232,240,0.6)',
+    fontSize: theme.typography.fontSize.sm,
+  },
+  listContainer: {
+    gap: theme.spacing.lg,
+  },
+  sitterCard: {
+    gap: theme.spacing.lg,
+  },
+  sitterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  sitterAvatar: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+  },
+  sitterInfo: {
+    flex: 1,
+    gap: 6,
+  },
+  sitterTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  sitterName: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.white,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  ratingText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: 'rgba(226,232,240,0.78)',
+  },
+  locationText: {
+    fontSize: theme.typography.fontSize.xs,
+    color: 'rgba(226,232,240,0.65)',
+  },
+  rateBubble: {
+    alignItems: 'flex-end',
+  },
+  rateAmount: {
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.white,
+  },
+  rateUnit: {
+    fontSize: theme.typography.fontSize.xs,
+    color: 'rgba(226,232,240,0.7)',
+  },
+  skillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.xs,
+  },
+  skillChip: {
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  skillText: {
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSize.xs,
+  },
+  moreSkills: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.accent,
+    alignSelf: 'center',
+  },
+  backRow: {
+    alignItems: 'center',
   },
   pickerOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(8,5,36,0.7)',
     justifyContent: 'flex-end',
   },
   pickerCard: {
     backgroundColor: '#0F172A',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    padding: 24,
+    padding: theme.spacing['2xl'],
   },
   pickerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: theme.spacing.md,
   },
   pickerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#E2E8F0',
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.white,
   },
   pickerActions: {
-    marginTop: 16,
-  },
-  filterTag: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  filterTagActive: {
-    backgroundColor: '#3A7DFF',
-    borderColor: '#3A7DFF',
-  },
-  filterTagText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#64748B',
-  },
-  filterTagTextActive: {
-    color: '#FFFFFF',
-  },
-  sittersContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  sitterCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sitterHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sitterAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
-  },
-  sitterInfo: {
-    flex: 1,
-  },
-  sitterNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  sitterName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1E293B',
-    marginRight: 8,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  ratingText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1E293B',
-    marginLeft: 4,
-  },
-  reviewsText: {
-    fontSize: 14,
-    color: '#64748B',
-    marginLeft: 4,
-  },
-  sitterLocation: {
-    fontSize: 14,
-    color: '#64748B',
-  },
-  rateContainer: {
-    alignItems: 'flex-end',
-  },
-  rateText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#3A7DFF',
-  },
-  rateLabel: {
-    fontSize: 12,
-    color: '#64748B',
-  },
-  sitterDetails: {
-    marginBottom: 16,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  detailText: {
-    fontSize: 14,
-    color: '#64748B',
-    marginLeft: 8,
-  },
-  skillsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 16,
-  },
-  skillTag: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  skillText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#64748B',
-  },
-  moreSkillsText: {
-    fontSize: 12,
-    color: '#3A7DFF',
-    fontWeight: '500',
-    alignSelf: 'center',
-  },
-  bookButton: {
-    backgroundColor: '#3A7DFF',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  bookButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    marginTop: theme.spacing.lg,
   },
 });
 
-export default ParentBookScreen; 
+export default ParentBookScreen;
+
